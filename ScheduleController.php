@@ -13,7 +13,7 @@ class ScheduleController extends Controller
     /**
      * @var Schedule
      */
-    public $schedule;
+    public $schedule = [];
     /**
      * Schedule file that will be used to run schedule
      * @var string
