@@ -1,0 +1,22 @@
+{
+    "name": "omnilight/yii2-scheduling",
+    "description": "Scheduling extension for Yii2 framework",
+    "keywords": ["yii", "scheduling", "cron"],
+    "minimum-stability": "dev",
+    "authors": [
+        {
+            "name": "Pavel Agalecky",
+            "email": "pavel.agalecky@gmail.com"
+        }
+    ],
+    "type": "yii2-extension",
+    "require": {
+        "php": ">=5.4.0",
+        "yiisoft/yii2": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "omnilight\\scheduling\\": ""
+        }
+    }
+}
