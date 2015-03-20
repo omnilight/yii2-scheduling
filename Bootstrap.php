@@ -3,6 +3,7 @@
 namespace omnilight\scheduling;
 use yii\base\BootstrapInterface;
 use yii\base\Application;
+use yii\di\Instance;
 
 
 /**

@@ -13,7 +13,7 @@ class ScheduleController extends Controller
     /**
      * @var Schedule
      */
-    public $schedule = [];
+    public $schedule = 'schedule';
     /**
      * @var string Schedule file that will be used to run schedule
      */
@@ -29,7 +29,11 @@ class ScheduleController extends Controller
 
     public function init()
     {
-        $this->schedule = Instance::ensure($this->schedule, Schedule::className());
+        if (\Yii::$app->has($this->schedule)) {
+            $this->schedule = Instance::ensure($this->schedule, Schedule::className());
+        } else {
+            $this->schedule = \Yii::createObject(Schedule::className());
+        }
         parent::init();
     }
 
