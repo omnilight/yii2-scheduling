@@ -96,13 +96,12 @@ class Event extends Object
     /**
      * Run the command in the foreground.
      *
-     * @param  \Illuminate\Contracts\Container\Container $container
      * @return void
      */
     protected function runCommandInForeground(Container $container)
     {
         (new Process(
-            trim($this->buildCommand(), '& '), base_path(), null, null, null
+            trim($this->buildCommand(), '& '), \Yii::getAlias('@app'), null, null, null
         ))->run();
         $this->callAfterCallbacks($container);
     }
@@ -138,14 +137,14 @@ class Event extends Object
      */
     protected function runCommandInBackground()
     {
-        chdir(base_path());
+        chdir(\Yii::getAlias('@app'));
         exec($this->buildCommand());
     }
 
     /**
      * Determine if the given event should run based on the Cron expression.
      *
-     * @param  \Illuminate\Contracts\Foundation\Application $app
+     * @param Application $app
      * @return bool
      */
     public function isDue(Application $app)
