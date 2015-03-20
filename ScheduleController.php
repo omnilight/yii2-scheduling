@@ -6,7 +6,7 @@ use yii\di\Instance;
 
 
 /**
- * Class ScheduleController
+ * Run the scheduled commands
  */
 class ScheduleController extends Controller
 {
@@ -15,8 +15,7 @@ class ScheduleController extends Controller
      */
     public $schedule = [];
     /**
-     * Schedule file that will be used to run schedule
-     * @var string
+     * @var string Schedule file that will be used to run schedule
      */
     public $scheduleFile;
 

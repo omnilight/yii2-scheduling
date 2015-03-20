@@ -161,7 +161,7 @@ class Event extends Object
      */
     protected function expressionPasses()
     {
-        $date = Carbon::now();
+        $date = new \DateTime('now');
         if ($this->_timezone) {
             $date->setTimezone($this->_timezone);
         }
@@ -287,7 +287,7 @@ class Event extends Object
     /**
      * Set the days of the week the command should run on.
      *
-     * @param  array $days
+     * @param  array|int $days
      * @return $this
      */
     public function days($days)
