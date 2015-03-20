@@ -222,3 +222,11 @@ You do not have to use `schedule` component directly or define it in your applic
 ```php
 'schedule' => 'omnilight\scheduling\Schedule',
 ```
+
+Using addition functions
+------------------------
+
+If you want to use `thenPing` method of the Event, you should add the following string to the `composer.json` of your app:
+```
+"guzzlehttp/guzzle": "~5.0"
+```
