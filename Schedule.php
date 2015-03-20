@@ -65,7 +65,7 @@ class Schedule extends Component
      */
     public function dueEvents(Application $app)
     {
-        return array_filter($this->events, function(Event $event) use ($app)
+        return array_filter($this->_events, function(Event $event) use ($app)
         {
             return $event->isDue($app);
         });

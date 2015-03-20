@@ -1,6 +1,7 @@
 <?php
 
 namespace omnilight\scheduling;
+use yii\base\Application;
 use yii\base\InvalidParamException;
 use yii\base\Object;
 
@@ -46,13 +47,13 @@ class CallbackEvent extends Event
     /**
      * Run the given event.
      *
-     * @param  \Illuminate\Contracts\Container\Container  $container
+     * @param Application $app
      * @return mixed
      */
-    public function run(Container $container)
+    public function run(Application $app)
     {
-        $response = $container->call($this->callback, $this->parameters);
-        parent::callAfterCallbacks($container);
+        $response = call_user_func_array($this->callback, array_merge($this->parameters, [$app]));
+        parent::callAfterCallbacks($app);
         return $response;
     }
     /**
@@ -62,7 +63,7 @@ class CallbackEvent extends Event
      */
     public function getSummaryForDisplay()
     {
-        if (is_string($this->description)) return $this->description;
+        if (is_string($this->_description)) return $this->_description;
         return is_string($this->callback) ? $this->callback : 'Closure';
     }
 

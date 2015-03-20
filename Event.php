@@ -2,10 +2,12 @@
 
 namespace omnilight\scheduling;
 
+use Cron\CronExpression;
+use GuzzleHttp\Client as HttpClient;
+use Symfony\Component\Process\Process;
 use yii\base\Application;
 use yii\base\InvalidCallException;
 use yii\base\Object;
-use yii\di\Container;
 use yii\mail\MailerInterface;
 
 
@@ -24,49 +26,49 @@ class Event extends Object
      *
      * @var string
      */
-    protected $expression = '* * * * * *';
+    protected $_expression = '* * * * * *';
     /**
      * The timezone the date should be evaluated on.
      *
      * @var \DateTimeZone|string
      */
-    protected $timezone;
+    protected $_timezone;
     /**
      * The user the command should run as.
      *
      * @var string
      */
-    protected $user;
+    protected $_user;
     /**
      * The filter callback.
      *
      * @var \Closure
      */
-    protected $filter;
+    protected $_filter;
     /**
      * The reject callback.
      *
      * @var \Closure
      */
-    protected $reject;
+    protected $_reject;
     /**
      * The location that output should be sent to.
      *
      * @var string
      */
-    protected $output = '/dev/null';
+    protected $_output = '/dev/null';
     /**
      * The array of callbacks to be run after the event is finished.
      *
      * @var array
      */
-    protected $afterCallbacks = [];
+    protected $_afterCallbacks = [];
     /**
      * The human readable description of the event.
      *
      * @var string
      */
-    protected $description;
+    protected $_description;
 
     /**
      * Create a new event instance.
@@ -86,7 +88,7 @@ class Event extends Object
      */
     public function run(Application $app)
     {
-        if (count($this->afterCallbacks) > 0) {
+        if (count($this->_afterCallbacks) > 0) {
             $this->runCommandInForeground($app);
         } else {
             $this->runCommandInBackground();
@@ -96,14 +98,14 @@ class Event extends Object
     /**
      * Run the command in the foreground.
      *
-     * @return void
+     * @param Application $app
      */
-    protected function runCommandInForeground(Container $container)
+    protected function runCommandInForeground(Application $app)
     {
         (new Process(
             trim($this->buildCommand(), '& '), \Yii::getAlias('@app'), null, null, null
         ))->run();
-        $this->callAfterCallbacks($container);
+        $this->callAfterCallbacks($app);
     }
 
     /**
@@ -113,20 +115,19 @@ class Event extends Object
      */
     public function buildCommand()
     {
-        $command = $this->command . ' > ' . $this->output . ' 2>&1 &';
-        return $this->user ? 'sudo -u ' . $this->user . ' ' . $command : $command;
+        $command = $this->command . ' > ' . $this->_output . ' 2>&1 &';
+        return $this->_user ? 'sudo -u ' . $this->_user . ' ' . $command : $command;
     }
 
     /**
      * Call all of the "after" callbacks for the event.
      *
-     * @param  \Illuminate\Contracts\Container\Container $container
-     * @return void
+     * @param Application $app
      */
-    protected function callAfterCallbacks(Container $container)
+    protected function callAfterCallbacks(Application $app)
     {
-        foreach ($this->afterCallbacks as $callback) {
-            $container->call($callback);
+        foreach ($this->_afterCallbacks as $callback) {
+            call_user_func($callback, $app);
         }
     }
 
@@ -161,22 +162,22 @@ class Event extends Object
     protected function expressionPasses()
     {
         $date = Carbon::now();
-        if ($this->timezone) {
-            $date->setTimezone($this->timezone);
+        if ($this->_timezone) {
+            $date->setTimezone($this->_timezone);
         }
-        return CronExpression::factory($this->expression)->isDue($date);
+        return CronExpression::factory($this->_expression)->isDue($date);
     }
 
     /**
      * Determine if the filters pass for the event.
      *
-     * @param Container $container
+     * @param Application $app
      * @return bool
      */
-    protected function filtersPass(Container $container)
+    protected function filtersPass(Application $app)
     {
-        if (($this->filter && ($this->filter)) ||
-            $this->reject && $container->call($this->reject)
+        if (($this->_filter && ($this->_filter)) ||
+            $this->_reject && call_user_func($this->_reject, $app)
         ) {
             return false;
         }
@@ -201,7 +202,7 @@ class Event extends Object
      */
     public function cron($expression)
     {
-        $this->expression = $expression;
+        $this->_expression = $expression;
         return $this;
     }
 
@@ -248,7 +249,7 @@ class Event extends Object
      */
     protected function spliceIntoPosition($position, $value)
     {
-        $segments = explode(' ', $this->expression);
+        $segments = explode(' ', $this->_expression);
         $segments[$position - 1] = $value;
         return $this->cron(implode(' ', $segments));
     }
@@ -286,7 +287,7 @@ class Event extends Object
     /**
      * Set the days of the week the command should run on.
      *
-     * @param  array|dynamic $days
+     * @param  array $days
      * @return $this
      */
     public function days($days)
@@ -436,7 +437,7 @@ class Event extends Object
      */
     public function timezone($timezone)
     {
-        $this->timezone = $timezone;
+        $this->_timezone = $timezone;
         return $this;
     }
 
@@ -448,7 +449,7 @@ class Event extends Object
      */
     public function user($user)
     {
-        $this->user = $user;
+        $this->_user = $user;
         return $this;
     }
 
@@ -460,7 +461,7 @@ class Event extends Object
      */
     public function when(\Closure $callback)
     {
-        $this->filter = $callback;
+        $this->_filter = $callback;
         return $this;
     }
 
@@ -472,7 +473,7 @@ class Event extends Object
      */
     public function skip(\Closure $callback)
     {
-        $this->reject = $callback;
+        $this->_reject = $callback;
         return $this;
     }
 
@@ -484,7 +485,7 @@ class Event extends Object
      */
     public function sendOutputTo($location)
     {
-        $this->output = $location;
+        $this->_output = $location;
         return $this;
     }
 
@@ -498,12 +499,12 @@ class Event extends Object
      */
     public function emailOutputTo($addresses)
     {
-        if (is_null($this->output) || $this->output == '/dev/null') {
+        if (is_null($this->_output) || $this->_output == '/dev/null') {
             throw new InvalidCallException("Must direct output to a file in order to e-mail results.");
         }
         $addresses = is_array($addresses) ? $addresses : func_get_args();
-        return $this->then(function (MailerInterface $mailer) use ($addresses) {
-            $this->emailOutput($mailer, $addresses);
+        return $this->then(function (Application $app) use ($addresses) {
+            $this->emailOutput($app->mailer, $addresses);
         });
     }
 
@@ -515,7 +516,7 @@ class Event extends Object
      */
     public function then(\Closure $callback)
     {
-        $this->afterCallbacks[] = $callback;
+        $this->_afterCallbacks[] = $callback;
         return $this;
     }
 
@@ -528,7 +529,7 @@ class Event extends Object
     protected function emailOutput(MailerInterface $mailer, $addresses)
     {
         $mailer->compose()
-            ->setTextBody(file_get_contents($this->output))
+            ->setTextBody(file_get_contents($this->_output))
             ->setSubject($this->getEmailSubject())
             ->setTo($addresses)
             ->send();
@@ -541,8 +542,8 @@ class Event extends Object
      */
     protected function getEmailSubject()
     {
-        if ($this->description) {
-            return 'Scheduled Job Output (' . $this->description . ')';
+        if ($this->_description) {
+            return 'Scheduled Job Output (' . $this->_description . ')';
         }
         return 'Scheduled Job Output';
     }
@@ -568,7 +569,7 @@ class Event extends Object
      */
     public function description($description)
     {
-        $this->description = $description;
+        $this->_description = $description;
         return $this;
     }
 
@@ -579,7 +580,7 @@ class Event extends Object
      */
     public function getSummaryForDisplay()
     {
-        if (is_string($this->description)) return $this->description;
+        if (is_string($this->_description)) return $this->_description;
         return $this->buildCommand();
     }
 
@@ -590,6 +591,6 @@ class Event extends Object
      */
     public function getExpression()
     {
-        return $this->expression;
+        return $this->_expression;
     }
 }
