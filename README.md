@@ -66,10 +66,10 @@ $schedule->call(function()
 $schedule->exec('composer self-update')->daily();
 ```
 
-**Manual Cron Expression**
+**Running command of your application**
 
 ```php
-$schedule->command('foo')->cron('* * * * *');
+$schedule->command('migrate')->cron('* * * * *');
 ```
 
 **Frequent Jobs**
@@ -146,4 +146,81 @@ $schedule->command('foo')->monthly()->when(function()
 
 ```php
 $schedule->command('foo')->sendOutputTo($filePath)->emailOutputTo('foo@example.com');
+```
+
+How to use this extension in your application?
+----------------------------------------------
+
+You should create the following file under `@console/config/schedule.php` (note: you can create file with any name
+and extension and anywere on your server, simpli ajust the name of the scheduleFile in the command below):
+
+```php
+<?php
+/**
+ * @var \omnilight\scheduling\Schedule $schedule
+ */
+
+// Place here all of your cron jobs
+
+// This command will execute ls command every five minutes
+$schedule->exec('ls')->everyFiveMinutes();
+
+// This command will execute migration command of your application every hour
+$schedule->command('migrate')->hourly();
+
+// This command will call callback function every day at 10:00
+$schedule->call(function(\yii\console\Application $app) {
+    // Some code here...
+})->dailyAt('10:00');
+
+```
+
+Next your should add the following command to your crontab:
+```
+* * * * * php /path/to/yii yii schedule/run --scheduleFile=@console/config/schedule.php 1>> /dev/null 2>&1
+```
+
+That's all! Now all your cronjobs will be runned as configured in your schedule.php file.
+
+How to use this extension in your own extension?
+------------------------------------------------
+
+First of all, you should include dependency to the `omnilight\yii2-scheduling` into your composer.json:
+
+```
+...
+'require': {
+    "omnilight/yii2-schedule": "*"
+}
+...
+```
+
+Next you should create bootstrapping class for your extension, as described in the http://www.yiiframework.com/doc-2.0/guide-structure-extensions.html#bootstrapping-classes
+
+Place into your bootstrapping method the following code:
+
+```php
+public function bootstrap(Application $app)
+{
+    if ($app instanceof \yii\console\Application) {
+        if ($app->has('schedule')) {
+            /** @var omnilight\scheduling\Schedule $schedule */
+            $schedule = $app->get('schedule');
+            // Place all your shedule command below
+            $schedule->command('my-extension-command')->dailyAt('12:00');
+        }
+    }
+}
+```
+
+Add to the README of your extension info for the user to register `schedule` component for the application
+and add `schedule/run` command to the crontab as described upper.
+
+Using `schedule` component
+--------------------------
+
+You do not have to use `schedule` component directly or define it in your application if you use schedule only in your application (and do not want to give ability for extensions to register they own cron jobs). But if you what to give extensions ability to register cronjobs, you should define `schedule` component in the application config:
+
+```php
+'schedule' => 'omnilight\scheduling\Schedule',
 ```
