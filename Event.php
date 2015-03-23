@@ -91,7 +91,7 @@ class Event extends Object
         if (count($this->_afterCallbacks) > 0) {
             $this->runCommandInForeground($app);
         } else {
-            $this->runCommandInBackground();
+            $this->runCommandInBackground($app);
         }
     }
 
@@ -103,7 +103,7 @@ class Event extends Object
     protected function runCommandInForeground(Application $app)
     {
         (new Process(
-            trim($this->buildCommand(), '& '), \Yii::getAlias('@app'), null, null, null
+            trim($this->buildCommand(), '& '), dirname($app->request->getScriptFile()), null, null, null
         ))->run();
         $this->callAfterCallbacks($app);
     }
@@ -134,11 +134,11 @@ class Event extends Object
     /**
      * Run the command in the background using exec.
      *
-     * @return void
+     * @param Application $app
      */
-    protected function runCommandInBackground()
+    protected function runCommandInBackground(Application $app)
     {
-        chdir(\Yii::getAlias('@app'));
+        chdir(dirname($app->request->getScriptFile()));
         exec($this->buildCommand());
     }
 
