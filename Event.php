@@ -150,8 +150,7 @@ class Event extends Object
      */
     public function isDue(Application $app)
     {
-        return $this->expressionPasses() &&
-        $this->filtersPass($app);
+        return $this->expressionPasses() && $this->filtersPass($app);
     }
 
     /**
