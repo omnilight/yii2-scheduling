@@ -230,3 +230,9 @@ If you want to use `thenPing` method of the Event, you should add the following 
 ```
 "guzzlehttp/guzzle": "~5.0"
 ```
+
+Note about timezones
+--------------------
+
+Please note, that this is PHP extension, so it use timezone defined in php config or in your Yii's configuration file,
+so set them correctly.
