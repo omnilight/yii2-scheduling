@@ -11,13 +11,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require omnilight/yii2-schedule "*"
+php composer.phar require omnilight/yii2-scheduling "*"
 ```
 
 or add
 
 ```json
-"omnilight/yii2-schedule": "*"
+"omnilight/yii2-scheduling": "*"
 ```
 
 to the `require` section of your composer.json.
