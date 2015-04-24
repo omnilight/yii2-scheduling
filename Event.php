@@ -6,16 +6,19 @@ use Cron\CronExpression;
 use GuzzleHttp\Client as HttpClient;
 use Symfony\Component\Process\Process;
 use yii\base\Application;
+use yii\base\Component;
 use yii\base\InvalidCallException;
-use yii\base\Object;
 use yii\mail\MailerInterface;
 
 
 /**
  * Class Event
  */
-class Event extends Object
+class Event extends Component
 {
+    const EVENT_BEFORE_RUN = 'beforeRun';
+    const EVENT_AFTER_RUN = 'afterRun';
+
     /**
      * Command string
      * @var string
@@ -88,11 +91,13 @@ class Event extends Object
      */
     public function run(Application $app)
     {
+        $this->trigger(self::EVENT_BEFORE_RUN);
         if (count($this->_afterCallbacks) > 0) {
             $this->runCommandInForeground($app);
         } else {
             $this->runCommandInBackground($app);
         }
+        $this->trigger(self::EVENT_AFTER_RUN);
     }
 
     /**
