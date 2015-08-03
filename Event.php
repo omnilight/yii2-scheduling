@@ -404,6 +404,16 @@ class Event extends Component
     }
 
     /**
+     * Schedule the event to run every minute.
+     *
+     * @return $this
+     */
+    public function everyMinute()
+    {
+        return $this->cron('* * * * * *');
+    }
+
+    /**
      * Schedule the event to run every N minutes.
      *
      * @param int|string $minutes
