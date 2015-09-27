@@ -59,7 +59,7 @@ class Event extends Component
      *
      * @var string
      */
-    protected $_output = '/dev/null';
+    protected $_output = null;
     /**
      * The array of callbacks to be run after the event is finished.
      *
@@ -82,6 +82,7 @@ class Event extends Component
     public function __construct($command, $config = [])
     {
         $this->command = $command;
+        $this->_output = $this->getDefaultOutput();
         parent::__construct($config);
     }
 
@@ -524,7 +525,7 @@ class Event extends Component
      */
     public function emailOutputTo($addresses)
     {
-        if (is_null($this->_output) || $this->_output == '/dev/null') {
+        if (is_null($this->_output) || $this->_output == $this->getDefaultOutput()) {
             throw new InvalidCallException("Must direct output to a file in order to e-mail results.");
         }
         $addresses = is_array($addresses) ? $addresses : func_get_args();
@@ -617,5 +618,14 @@ class Event extends Component
     public function getExpression()
     {
         return $this->_expression;
+    }
+
+    public function getDefaultOutput()
+    {
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            return 'NUL';
+        } else {
+            return '/dev/null';
+        }
     }
 }
