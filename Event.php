@@ -72,6 +72,12 @@ class Event extends Component
      * @var string
      */
     protected $_description;
+    /**
+     * The From address used by mailer.
+     *
+     * @var string
+     */
+    protected $_fromAddress;
 
     /**
      * Create a new event instance.
@@ -557,6 +563,7 @@ class Event extends Component
         $mailer->compose()
             ->setTextBody(file_get_contents($this->_output))
             ->setSubject($this->getEmailSubject())
+            ->setFrom($this->_fromAddress)
             ->setTo($addresses)
             ->send();
     }
@@ -596,6 +603,18 @@ class Event extends Component
     public function description($description)
     {
         $this->_description = $description;
+        return $this;
+    }
+
+    /**
+     * Set the from address to be used by emailOutput.
+     *
+     * @param  string $address
+     * @return $this
+     */
+    public function fromAddress($address)
+    {
+        $this->_fromAddress = $address;
         return $this;
     }
 
