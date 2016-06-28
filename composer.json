@@ -1,5 +1,5 @@
 {
-  "name": "omnilight/yii2-scheduling",
+  "name": "gietos/yii2-scheduling",
   "description": "Scheduling extension for Yii2 framework",
   "keywords": [
     "yii",
@@ -25,10 +25,10 @@
   },
   "autoload": {
     "psr-4": {
-      "omnilight\\scheduling\\": ""
+      "gietos\\scheduling\\": ""
     }
   },
   "extra": {
-    "bootstrap": "omnilight\\scheduling\\Bootstrap"
+    "bootstrap": "gietos\\scheduling\\Bootstrap"
   }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace omnilight\scheduling;
+namespace gietos\scheduling;
 use yii\base\Application;
 use yii\base\InvalidParamException;
 use yii\base\Object;

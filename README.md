@@ -11,13 +11,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require omnilight/yii2-scheduling "*"
+php composer.phar require gietos/yii2-scheduling "*"
 ```
 
 or add
 
 ```json
-"omnilight/yii2-scheduling": "*"
+"gietos/yii2-scheduling": "*"
 ```
 
 to the `require` section of your composer.json.
@@ -155,7 +155,7 @@ and extension and anywere on your server, simpli ajust the name of the scheduleF
 ```php
 <?php
 /**
- * @var \omnilight\scheduling\Schedule $schedule
+ * @var \gietos\scheduling\Schedule $schedule
  */
 
 // Place here all of your cron jobs
@@ -183,12 +183,12 @@ That's all! Now all your cronjobs will be runned as configured in your schedule.
 How to use this extension in your own extension?
 ------------------------------------------------
 
-First of all, you should include dependency to the `omnilight\yii2-scheduling` into your composer.json:
+First of all, you should include dependency to the `gietos\yii2-scheduling` into your composer.json:
 
 ```
 ...
 'require': {
-    "omnilight/yii2-schedule": "*"
+    "gietos/yii2-schedule": "*"
 }
 ...
 ```
@@ -202,7 +202,7 @@ public function bootstrap(Application $app)
 {
     if ($app instanceof \yii\console\Application) {
         if ($app->has('schedule')) {
-            /** @var omnilight\scheduling\Schedule $schedule */
+            /** @var gietos\scheduling\Schedule $schedule */
             $schedule = $app->get('schedule');
             // Place all your shedule command below
             $schedule->command('my-extension-command')->dailyAt('12:00');
@@ -220,7 +220,7 @@ Using `schedule` component
 You do not have to use `schedule` component directly or define it in your application if you use schedule only in your application (and do not want to give ability for extensions to register they own cron jobs). But if you what to give extensions ability to register cronjobs, you should define `schedule` component in the application config:
 
 ```php
-'schedule' => 'omnilight\scheduling\Schedule',
+'schedule' => 'gietos\scheduling\Schedule',
 ```
 
 Using addition functions
