@@ -18,6 +18,11 @@ class Schedule extends Component
     protected $_events = [];
 
     /**
+     * @var string The name of cli script
+     */
+    public $cliScriptName = 'yii';
+
+    /**
      * Add a new callback event to the schedule.
      *
      * @param  string  $callback
@@ -37,7 +42,7 @@ class Schedule extends Component
      */
     public function command($command)
     {
-        return $this->exec(PHP_BINARY.' yii '.$command);
+        return $this->exec(PHP_BINARY . ' ' . $this->cliScriptName . ' ' . $command);
     }
 
     /**
