@@ -555,7 +555,7 @@ class Event extends Component
     protected function emailOutput(MailerInterface $mailer, $addresses)
     {
         $textBody = file_get_contents($this->_output);
-        if (trim($textBody) > '' ) {
+        if (trim($textBody) != '' ) {
             $mailer->compose()
                 ->setTextBody($textBody)
                 ->setSubject($this->getEmailSubject())
