@@ -42,6 +42,9 @@ class Schedule extends Component
      */
     public function command($command)
     {
+        //get full path of the cliScriptName in linux
+        //ToDo add logic for windows envviroment
+        $this->cliScriptName  =   Yii::getAlias("@app").'/yii';
         return $this->exec(PHP_BINARY . ' ' . $this->cliScriptName . ' ' . $command);
     }
 
