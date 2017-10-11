@@ -1,10 +1,9 @@
 <?php
 
 namespace omnilight\scheduling;
+use Yii;
 use yii\base\Application;
 use yii\base\InvalidParamException;
-use yii\base\Object;
-
 
 /**
  * Class CallbackEvent
@@ -34,7 +33,9 @@ class CallbackEvent extends Event
         $this->callback = $callback;
         $this->parameters = $parameters;
 
-        Object::__construct($config);
+        if (!empty($config)) {
+            Yii::configure($this, $config);
+        }
 
         if ( ! is_string($this->callback) && ! is_callable($this->callback))
         {
