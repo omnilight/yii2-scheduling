@@ -1,5 +1,5 @@
 {
-  "name": "omnilight/yii2-scheduling",
+  "name": "gietos/yii2-scheduling",
   "description": "Scheduling extension for Yii2 framework",
   "keywords": [
     "yii",
@@ -17,7 +17,7 @@
   "require": {
     "php": ">=5.4.0",
     "yiisoft/yii2": "2.0.*",
-    "symfony/process": "2.6.*",
+    "symfony/process": "2.6.* || 3.*",
     "mtdowling/cron-expression": "~1.0"
   },
   "suggest": {
@@ -25,10 +25,10 @@
   },
   "autoload": {
     "psr-4": {
-      "omnilight\\scheduling\\": ""
+      "gietos\\scheduling\\": ""
     }
   },
   "extra": {
-    "bootstrap": "omnilight\\scheduling\\Bootstrap"
+    "bootstrap": "gietos\\scheduling\\Bootstrap"
   }
 }
