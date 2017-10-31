@@ -1,6 +1,6 @@
 <?php
 
-namespace omnilight\scheduling;
+namespace gietos\scheduling;
 
 use Cron\CronExpression;
 use GuzzleHttp\Client as HttpClient;
@@ -181,7 +181,7 @@ class Event extends Component
      */
     protected function filtersPass(Application $app)
     {
-        if (($this->_filter && ($this->_filter)) ||
+        if ($this->_filter && !call_user_func($this->_filter, $app) ||
             $this->_reject && call_user_func($this->_reject, $app)
         ) {
             return false;

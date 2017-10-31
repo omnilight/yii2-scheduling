@@ -1,6 +1,6 @@
 <?php
 
-namespace omnilight\scheduling;
+namespace gietos\scheduling;
 use yii\base\Component;
 use yii\base\Application;
 
