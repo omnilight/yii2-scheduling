@@ -53,8 +53,10 @@ class CallbackEvent extends Event
      */
     public function run(Application $app)
     {
+        $this->trigger(self::EVENT_BEFORE_RUN);
         $response = call_user_func_array($this->callback, array_merge($this->parameters, [$app]));
         parent::callAfterCallbacks($app);
+        $this->trigger(self::EVENT_AFTER_RUN);
         return $response;
     }
     /**
