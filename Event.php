@@ -554,11 +554,15 @@ class Event extends Component
      */
     protected function emailOutput(MailerInterface $mailer, $addresses)
     {
-        $mailer->compose()
-            ->setTextBody(file_get_contents($this->_output))
-            ->setSubject($this->getEmailSubject())
-            ->setTo($addresses)
-            ->send();
+        $textBody = file_get_contents($this->_output);
+        if (trim($textBody) != '' ) {
+            $mailer->compose()
+                ->setTextBody($textBody)
+                ->setSubject($this->getEmailSubject())
+                ->setFrom($this->_fromAddress)
+                ->setTo($addresses)
+                ->send();
+        }
     }
 
     /**
