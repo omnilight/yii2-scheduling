@@ -1,7 +1,7 @@
 Schedule extension for Yii2
 ===========================
 
-This extension is the port of Laravel's Schedule component (http://laravel.com/docs/master/artisan#scheduling-artisan-commands)
+This extension is the port of Laravel's Schedule component (https://laravel.com/docs/master/scheduling#scheduling-artisan-commands)
 
 Installation
 ------------
@@ -144,6 +144,12 @@ $schedule->command('foo')->monthly()->when(function()
 
 ```php
 $schedule->command('foo')->sendOutputTo($filePath)->emailOutputTo('foo@example.com');
+```
+
+**Preventing Task Overlaps**
+
+```php
+$schedule->command('foo')->withoutOverlapping();
 ```
 
 How to use this extension in your application?
