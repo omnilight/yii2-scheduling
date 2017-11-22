@@ -9,6 +9,7 @@ use yii\base\Application;
 use yii\base\Component;
 use yii\base\InvalidCallException;
 use yii\mail\MailerInterface;
+use yii\mutex\Mutex;
 
 
 /**
@@ -72,16 +73,24 @@ class Event extends Component
      * @var string
      */
     protected $_description;
+    /**
+     * The mutex implementation.
+     *
+     * @var \yii\mutex\Mutex
+     */
+    protected $_mutex;
 
     /**
      * Create a new event instance.
      *
+     * @param Mutex $mutex
      * @param string $command
      * @param array $config
      */
-    public function __construct($command, $config = [])
+    public function __construct(Mutex $mutex, $command, $config = [])
     {
         $this->command = $command;
+        $this->_mutex = $mutex;
         $this->_output = $this->getDefaultOutput();
         parent::__construct($config);
     }
@@ -99,6 +108,16 @@ class Event extends Component
             $this->runCommandInBackground($app);
         }
         $this->trigger(self::EVENT_AFTER_RUN);
+    }
+
+    /**
+     * Get the mutex name for the scheduled command.
+     *
+     * @return string
+     */
+    public function mutexName()
+    {
+        return 'framework/schedule-' . sha1($this->_expression . $this->command);
     }
 
     /**
@@ -477,6 +496,20 @@ class Event extends Component
     {
         $this->_user = $user;
         return $this;
+    }
+
+    /**
+     * Do not allow the event to overlap each other.
+     *
+     * @return $this
+     */
+    public function withoutOverlapping()
+    {
+        return $this->then(function() {
+            $this->_mutex->release($this->mutexName());
+        })->skip(function() {
+            return !$this->_mutex->acquire($this->mutexName());
+        });
     }
 
     /**
