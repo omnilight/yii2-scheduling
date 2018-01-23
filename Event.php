@@ -115,7 +115,7 @@ class Event extends Component
      *
      * @return string
      */
-    public function mutexName()
+    protected function mutexName()
     {
         return 'framework/schedule-' . sha1($this->_expression . $this->command);
     }
