@@ -151,6 +151,7 @@ $schedule->command('foo')->sendOutputTo($filePath)->emailOutputTo('foo@example.c
 ```php
 $schedule->command('foo')->withoutOverlapping();
 ```
+Used by default yii\mutex\FileMutex or 'mutex' application component (http://www.yiiframework.com/doc-2.0/yii-mutex-mutex.html)
 
 How to use this extension in your application?
 ----------------------------------------------
