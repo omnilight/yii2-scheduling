@@ -1,8 +1,11 @@
 <?php
 
 namespace omnilight\scheduling;
+
+use Yii;
 use yii\base\Component;
 use yii\base\Application;
+use yii\mutex\FileMutex;
 
 
 /**
@@ -18,9 +21,27 @@ class Schedule extends Component
     protected $_events = [];
 
     /**
+     * The mutex implementation.
+     *
+     * @var \yii\mutex\Mutex
+     */
+    protected $_mutex;
+
+    /**
      * @var string The name of cli script
      */
     public $cliScriptName = 'yii';
+
+    /**
+     * Schedule constructor.
+     * @param array $config
+     */
+    public function __construct(array $config = [])
+    {
+        $this->_mutex = Yii::$app->has('mutex') ? Yii::$app->get('mutex') : (new FileMutex());
+
+        parent::__construct($config);
+    }
 
     /**
      * Add a new callback event to the schedule.
@@ -31,7 +52,7 @@ class Schedule extends Component
      */
     public function call($callback, array $parameters = array())
     {
-        $this->_events[] = $event = new CallbackEvent($callback, $parameters);
+        $this->_events[] = $event = new CallbackEvent($this->_mutex, $callback, $parameters);
         return $event;
     }
     /**
@@ -53,7 +74,7 @@ class Schedule extends Component
      */
     public function exec($command)
     {
-        $this->_events[] = $event = new Event($command);
+        $this->_events[] = $event = new Event($this->_mutex, $command);
         return $event;
     }
 
