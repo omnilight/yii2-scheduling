@@ -62,6 +62,12 @@ class Event extends Component
      */
     protected $_output = null;
     /**
+     * The location that output should be sent to.
+     *
+     * @var string
+     */
+    protected $_redirect = '>';
+    /**
      * The array of callbacks to be run after the event is finished.
      *
      * @var array
@@ -73,12 +79,6 @@ class Event extends Component
      * @var string
      */
     protected $_description;
-    /**
-     * The mutex implementation.
-     *
-     * @var \yii\mutex\Mutex
-     */
-    protected $_mutex;
 
     /**
      * Create a new event instance.
@@ -546,6 +546,18 @@ class Event extends Component
     {
         $this->_output = $location;
         return $this;
+    }
+
+    /**
+     * Append the output of the command to a given location.
+     *
+     * @param  string $location
+     * @return $this
+     */
+    public function appendOutputTo($location)
+    {
+        $this->_redirect = '>>';
+        return $this->sendOutputTo($location);
     }
 
     /**
