@@ -591,7 +591,7 @@ class Event extends Component
 
         if (trim($textBody) != '' ) {
             $mailer->compose()
-                ->setTextBody(file_get_contents($this->_output))
+                ->setTextBody($textBody)
                 ->setSubject($this->getEmailSubject())
                 ->setTo($addresses)
                 ->send();
