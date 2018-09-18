@@ -62,6 +62,12 @@ class Event extends Component
      */
     protected $_output = null;
     /**
+     * The string for redirection.
+     *
+     * @var array
+     */
+    protected $_redirect = ' > ';
+    /**
      * The array of callbacks to be run after the event is finished.
      *
      * @var array
@@ -140,7 +146,7 @@ class Event extends Component
      */
     public function buildCommand()
     {
-        $command = $this->command . ' > ' . $this->_output . ' 2>&1 &';
+        $command = $this->command . $this->_redirect . $this->_output . ' 2>&1 &';
         return $this->_user ? 'sudo -u ' . $this->_user . ' ' . $command : $command;
     }
 
@@ -544,6 +550,20 @@ class Event extends Component
      */
     public function sendOutputTo($location)
     {
+        $this->_redirect = ' > ';
+        $this->_output = $location;
+        return $this;
+    }
+
+    /**
+     * Append the output of the command to a given location.
+     *
+     * @param  string $location
+     * @return $this
+     */
+    public function appendOutputTo($location)
+    {
+        $this->_redirect = ' >> ';
         $this->_output = $location;
         return $this;
     }
