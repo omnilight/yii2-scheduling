@@ -519,6 +519,20 @@ class Event extends Component
     }
 
     /**
+     * Allow the event to only run on one server for each cron expression.
+     *
+     * @return $this
+     */
+    public function onOneServer()
+    {
+        if ($this->_mutex instanceof \yii\mutex\FileMutex) {
+            throw new \yii\base\InvalidConfigException("You must config mutex in the application component, except the FileMutex.");
+        }
+
+        return $this->withoutOverlapping();
+    }
+
+    /**
      * Register a callback to further filter the schedule.
      *
      * @param  \Closure $callback
