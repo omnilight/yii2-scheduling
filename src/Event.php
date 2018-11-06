@@ -225,6 +225,17 @@ class Event extends Component
     }
 
     /**
+     * Schedule the event to run hourly at a given offset in the hour.
+     *
+     * @param  int  $offset
+     * @return $this
+     */
+    public function hourlyAt($offset)
+    {
+        return $this->spliceIntoPosition(1, $offset);
+    }
+
+    /**
      * The Cron expression representing the event's frequency.
      *
      * @param  string $expression
@@ -287,11 +298,16 @@ class Event extends Component
     /**
      * Schedule the event to run twice daily.
      *
+     * @param  int  $first
+     * @param  int  $second
      * @return $this
      */
-    public function twiceDaily()
+    public function twiceDaily($first = 1, $second = 13)
     {
-        return $this->cron('0 1,13 * * * *');
+        $hours = $first.','.$second;
+
+        return $this->spliceIntoPosition(1, 0)
+                    ->spliceIntoPosition(2, $hours);
     }
 
     /**
@@ -302,6 +318,16 @@ class Event extends Component
     public function weekdays()
     {
         return $this->spliceIntoPosition(5, '1-5');
+    }
+
+    /**
+     * Schedule the event to run only on weekends.
+     *
+     * @return $this
+     */
+    public function weekends()
+    {
+        return $this->spliceIntoPosition(5, '0,6');
     }
 
     /**
@@ -420,6 +446,49 @@ class Event extends Component
     }
 
     /**
+     * Schedule the event to run monthly on a given day and time.
+     *
+     * @param  int  $day
+     * @param  string  $time
+     * @return $this
+     */
+    public function monthlyOn($day = 1, $time = '0:0')
+    {
+        $this->dailyAt($time);
+
+        return $this->spliceIntoPosition(3, $day);
+    }
+
+    /**
+     * Schedule the event to run twice monthly.
+     *
+     * @param  int  $first
+     * @param  int  $second
+     * @return $this
+     */
+    public function twiceMonthly($first = 1, $second = 16)
+    {
+        $days = $first.','.$second;
+
+        return $this->spliceIntoPosition(1, 0)
+            ->spliceIntoPosition(2, 0)
+            ->spliceIntoPosition(3, $days);
+    }
+
+    /**
+     * Schedule the event to run quarterly.
+     *
+     * @return $this
+     */
+    public function quarterly()
+    {
+        return $this->spliceIntoPosition(1, 0)
+                    ->spliceIntoPosition(2, 0)
+                    ->spliceIntoPosition(3, 1)
+                    ->spliceIntoPosition(4, '1-12/3');
+    }
+
+    /**
      * Schedule the event to run yearly.
      *
      * @return $this
@@ -468,6 +537,16 @@ class Event extends Component
     public function everyTenMinutes()
     {
         return $this->everyNMinutes(10);
+    }
+
+    /**
+     * Schedule the event to run every fifteen minutes.
+     *
+     * @return $this
+     */
+    public function everyFifteenMinutes()
+    {
+        return $this->spliceIntoPosition(1, '*/15');
     }
 
     /**
