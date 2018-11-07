@@ -10,7 +10,7 @@ use yii\base\Component;
 use yii\base\InvalidCallException;
 use yii\mail\MailerInterface;
 use yii\mutex\Mutex;
-
+use yii\mutex\FileMutex;
 
 /**
  * Class Event
@@ -516,6 +516,20 @@ class Event extends Component
         })->skip(function() {
             return !$this->_mutex->acquire($this->mutexName());
         });
+    }
+
+    /**
+     * Allow the event to only run on one server for each cron expression.
+     *
+     * @return $this
+     */
+    public function onOneServer()
+    {
+        if ($this->_mutex instanceof FileMutex) {
+            throw new \yii\base\InvalidConfigException('You must config mutex in the application component, except the FileMutex.');
+        }
+
+        return $this->withoutOverlapping();
     }
 
     /**

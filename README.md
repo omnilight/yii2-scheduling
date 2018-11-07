@@ -29,8 +29,8 @@ This project is inspired by the Laravel's Schedule component and tries to bring 
 Quote from Laravel's documentation:
 
 ```
-In the past, developers have generated a Cron entry for each console command they wished to schedule. 
-However, this is a headache. Your console schedule is no longer in source control, 
+In the past, developers have generated a Cron entry for each console command they wished to schedule.
+However, this is a headache. Your console schedule is no longer in source control,
 and you must SSH into your server to add the Cron entries. Let's make our lives easier.
 ```
 
@@ -152,6 +152,32 @@ $schedule->command('foo')->sendOutputTo($filePath)->emailOutputTo('foo@example.c
 $schedule->command('foo')->withoutOverlapping();
 ```
 Used by default yii\mutex\FileMutex or 'mutex' application component (http://www.yiiframework.com/doc-2.0/yii-mutex-mutex.html)
+
+**Running Tasks On One Server**
+
+>To utilize this feature, you must config mutex in the application component, except the FileMutex:  `yii\mutex\MysqlMutex`,`yii\mutex\PgsqlMutex`,`yii\mutex\OracleMutex` or `yii\redis\Mutex`. In addition, all servers must be communicating with the same central db/cache server.
+
+Below shows the redis mutex demo:
+
+```php
+'components' => [
+    'mutex' => [
+        'class' => 'yii\redis\Mutex',
+        'redis' => [
+            'hostname' => 'localhost',
+            'port' => 6379,
+            'database' => 0,
+        ]
+    ],
+],
+```
+
+```php
+$schedule->command('report:generate')
+                ->fridays()
+                ->at('17:00')
+                ->onOneServer();
+```
 
 How to use this extension in your application?
 ----------------------------------------------
