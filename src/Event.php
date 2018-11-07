@@ -8,6 +8,7 @@ use Symfony\Component\Process\Process;
 use yii\base\Application;
 use yii\base\Component;
 use yii\base\InvalidCallException;
+use yii\base\InvalidConfigException;
 use yii\mail\MailerInterface;
 use yii\mutex\Mutex;
 use yii\mutex\FileMutex;
@@ -526,7 +527,7 @@ class Event extends Component
     public function onOneServer()
     {
         if ($this->_mutex instanceof FileMutex) {
-            throw new \yii\base\InvalidConfigException('You must config mutex in the application component, except the FileMutex.');
+            throw new InvalidConfigException('You must config mutex in the application component, except the FileMutex.');
         }
 
         return $this->withoutOverlapping();
