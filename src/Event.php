@@ -514,9 +514,9 @@ class Event extends Component
     public function withoutOverlapping($expiresAt = 86400)
     {
         return $this->then(function() {
-            $this->_mutex->release($this->mutexName(), $expiresAt);
-        })->skip(function() {
-            return !$this->_mutex->acquire($this->mutexName());
+            $this->_mutex->release($this->mutexName());
+        })->skip(function() use ($expiresAt) {
+            return !$this->_mutex->acquire($this->mutexName(), $expiresAt);
         });
     }
 
@@ -533,9 +533,9 @@ class Event extends Component
         $time = new \DateTime('now');
         $name = $this->mutexName() . $time->format('Hi');
         return $this->then(function() use ($name) {
-            $this->_mutex->release($name, 3600);
+            $this->_mutex->release($name);
         })->skip(function() use ($name) {
-            return !$this->_mutex->acquire($name);
+            return !$this->_mutex->acquire($name, 3600);
         });
     }
 
