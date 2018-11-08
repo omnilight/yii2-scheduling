@@ -508,12 +508,13 @@ class Event extends Component
     /**
      * Do not allow the event to overlap each other.
      *
+     * @param  int  $expiresAt
      * @return $this
      */
-    public function withoutOverlapping()
+    public function withoutOverlapping($expiresAt = 86400)
     {
         return $this->then(function() {
-            $this->_mutex->release($this->mutexName());
+            $this->_mutex->release($this->mutexName(), $expiresAt);
         })->skip(function() {
             return !$this->_mutex->acquire($this->mutexName());
         });
@@ -529,8 +530,13 @@ class Event extends Component
         if ($this->_mutex instanceof FileMutex) {
             throw new InvalidConfigException('You must config mutex in the application component, except the FileMutex.');
         }
-
-        return $this->withoutOverlapping();
+        $time = new \DateTime('now');
+        $name = $this->mutexName() . $time->format('Hi');
+        return $this->then(function() use ($name) {
+            $this->_mutex->release($name, 3600);
+        })->skip(function() use ($name) {
+            return !$this->_mutex->acquire($name);
+        });
     }
 
     /**
