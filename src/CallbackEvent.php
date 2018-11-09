@@ -73,7 +73,7 @@ class CallbackEvent extends Event
      * @return $this
      * @throws InvalidParamException
      */
-    public function withoutOverlapping($expiresAt = 86400)
+    public function withoutOverlapping($expiresAt = 1440)
     {
         if (empty($this->_description)) {
             throw new InvalidParamException(

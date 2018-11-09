@@ -163,6 +163,7 @@ Below shows the redis mutex demo:
 'components' => [
     'mutex' => [
         'class' => 'yii\redis\Mutex',
+        'autoRelease' => false, // You should disable autoRelease here
         'redis' => [
             'hostname' => 'localhost',
             'port' => 6379,
