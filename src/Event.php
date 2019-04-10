@@ -7,7 +7,6 @@ use GuzzleHttp\Client as HttpClient;
 use Symfony\Component\Process\Process;
 use yii\base\Application;
 use yii\base\Component;
-use yii\base\InvalidCallException;
 use yii\base\InvalidConfigException;
 use yii\mail\MailerInterface;
 use yii\mutex\Mutex;
@@ -63,12 +62,6 @@ class Event extends Component
      */
     protected $_output = null;
     /**
-     * The string for redirection.
-     *
-     * @var array
-     */
-    protected $_redirect = ' > ';
-    /**
      * The array of callbacks to be run after the event is finished.
      *
      * @var array
@@ -83,7 +76,7 @@ class Event extends Component
     /**
      * The mutex implementation.
      *
-     * @var \yii\mutex\Mutex
+     * @var Mutex
      */
     protected $_mutex;
 
@@ -98,7 +91,6 @@ class Event extends Component
     {
         $this->command = $command;
         $this->_mutex = $mutex;
-        $this->_output = $this->getDefaultOutput();
         parent::__construct($config);
     }
 
@@ -110,7 +102,8 @@ class Event extends Component
     {
         $this->trigger(self::EVENT_BEFORE_RUN);
         if (count($this->_afterCallbacks) > 0) {
-            $this->runCommandInForeground($app);
+            $process = $this->runCommandInForeground($app);
+            $this->callAfterCallbacks($app, $process);
         } else {
             $this->runCommandInBackground($app);
         }
@@ -131,35 +124,41 @@ class Event extends Component
      * Run the command in the foreground.
      *
      * @param Application $app
+     * @return Process
      */
     protected function runCommandInForeground(Application $app)
     {
-        (new Process(
-            trim($this->buildCommand(), '& '), dirname($app->request->getScriptFile()), null, null, null
-        ))->run();
-        $this->callAfterCallbacks($app);
+        $process = new Process($this->buildCommand(), dirname($app->request->getScriptFile()));
+        $logCallback = null;
+        if (isset($this->_output)) {
+            $logCallback = function ($type, $data) {
+                file_put_contents($this->_output, $data, FILE_APPEND);
+            };
+        }
+        $process->run($logCallback);
+        return $process;
     }
 
     /**
-     * Build the comand string.
+     * Build the command string.
      *
      * @return string
      */
     public function buildCommand()
     {
-        $command = $this->command . $this->_redirect . $this->_output . ' 2>&1 &';
-        return $this->_user ? 'sudo -u ' . $this->_user . ' ' . $command : $command;
+        return $this->_user ? 'sudo -u ' . $this->_user . ' ' . $this->command : $this->command;
     }
 
     /**
      * Call all of the "after" callbacks for the event.
      *
      * @param Application $app
+     * @param Process $process
      */
-    protected function callAfterCallbacks(Application $app)
+    protected function callAfterCallbacks(Application $app, Process $process)
     {
         foreach ($this->_afterCallbacks as $callback) {
-            call_user_func($callback, $app);
+            call_user_func($callback, $app, $process);
         }
     }
 
@@ -171,7 +170,7 @@ class Event extends Component
     protected function runCommandInBackground(Application $app)
     {
         chdir(dirname($app->request->getScriptFile()));
-        exec($this->buildCommand());
+        exec($this->buildCommand() . ' 2>&1 &');
     }
 
     /**
@@ -565,8 +564,8 @@ class Event extends Component
      */
     public function sendOutputTo($location)
     {
-        $this->_redirect = ' > ';
         $this->_output = $location;
+        file_put_contents($this->_output, '');
         return $this;
     }
 
@@ -578,7 +577,6 @@ class Event extends Component
      */
     public function appendOutputTo($location)
     {
-        $this->_redirect = ' >> ';
         $this->_output = $location;
         return $this;
     }
@@ -593,12 +591,9 @@ class Event extends Component
      */
     public function emailOutputTo($addresses)
     {
-        if (is_null($this->_output) || $this->_output == $this->getDefaultOutput()) {
-            throw new InvalidCallException("Must direct output to a file in order to e-mail results.");
-        }
         $addresses = is_array($addresses) ? $addresses : func_get_args();
-        return $this->then(function (Application $app) use ($addresses) {
-            $this->emailOutput($app->mailer, $addresses);
+        return $this->then(function (Application $app, Process $process) use ($addresses) {
+            $this->emailOutput($app->mailer, $addresses, $process);
         });
     }
 
@@ -618,19 +613,17 @@ class Event extends Component
      * E-mail the output of the event to the recipients.
      *
      * @param MailerInterface $mailer
-     * @param  array $addresses
+     * @param array $addresses
+     * @param Process $process
      */
-    protected function emailOutput(MailerInterface $mailer, $addresses)
+    protected function emailOutput(MailerInterface $mailer, array $addresses, Process $process)
     {
-        $textBody = file_get_contents($this->_output);
-
-        if (trim($textBody) != '' ) {
-            $mailer->compose()
-                ->setTextBody($textBody)
-                ->setSubject($this->getEmailSubject())
-                ->setTo($addresses)
-                ->send();
-        }
+        $mailer->compose()
+            ->setTextBody($process->getOutput() ?: '(empty)')
+            ->setSubject($this->getEmailSubject())
+            ->setTo($addresses)
+            ->send()
+        ;
     }
 
     /**
@@ -678,7 +671,9 @@ class Event extends Component
      */
     public function getSummaryForDisplay()
     {
-        if (is_string($this->_description)) return $this->_description;
+        if (is_string($this->_description)) {
+            return $this->_description;
+        }
         return $this->buildCommand();
     }
 
@@ -690,14 +685,5 @@ class Event extends Component
     public function getExpression()
     {
         return $this->_expression;
-    }
-
-    public function getDefaultOutput()
-    {
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            return 'NUL';
-        } else {
-            return '/dev/null';
-        }
     }
 }
