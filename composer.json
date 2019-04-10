@@ -28,7 +28,8 @@
   },
   "autoload": {
     "psr-4": {
-      "omnilight\\scheduling\\": "src"
+      "omnilight\\scheduling\\": "src",
+      "omnilight\\scheduling\\Tests\\": "tests"
     }
   },
   "extra": {
