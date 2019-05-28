@@ -88,6 +88,13 @@ class Event extends Component
     protected $_mutex;
 
     /**
+     * Decide if errors will be displayed.
+     *
+     * @var bool
+     */
+    protected $_omitErrors = false;
+
+    /**
      * Create a new event instance.
      *
      * @param Mutex $mutex
@@ -147,7 +154,7 @@ class Event extends Component
      */
     public function buildCommand()
     {
-        $command = $this->command . $this->_redirect . $this->_output . ' 2>&1 &';
+        $command = $this->command . $this->_redirect . $this->_output . ' ' . (($this->_omitErrors) ? '' : ' 2>&1 &');
         return $this->_user ? 'sudo -u ' . $this->_user . ' ' . $command : $command;
     }
 
@@ -502,6 +509,18 @@ class Event extends Component
     public function user($user)
     {
         $this->_user = $user;
+        return $this;
+    }
+
+    /**
+     * Set if errors should be displayed
+     *
+     * @param  bool $omitErrors
+     * @return $this
+     */
+    public function omitErrors(bool $omitErrors = false)
+    {
+        $this->_omitErrors = $omitErrors;
         return $this;
     }
 
