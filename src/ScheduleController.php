@@ -19,10 +19,15 @@ class ScheduleController extends Controller
      */
     public $scheduleFile;
 
+    /**
+     * @var bool set to true to avoid error output
+     */
+    public $omitErrors = false;
+
     public function options($actionID)
     {
         return array_merge(parent::options($actionID),
-            $actionID == 'run' ? ['scheduleFile'] : []
+            $actionID == 'run' ? ['scheduleFile', 'omitErrors'] : []
         );
     }
 
@@ -45,6 +50,7 @@ class ScheduleController extends Controller
         $events = $this->schedule->dueEvents(\Yii::$app);
 
         foreach ($events as $event) {
+            $event->omitErrors($this->omitErrors);
             $this->stdout('Running scheduled command: '.$event->getSummaryForDisplay()."\n");
             $event->run(\Yii::$app);
         }
