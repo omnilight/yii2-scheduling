@@ -518,7 +518,7 @@ class Event extends Component
      * @param  bool $omitErrors
      * @return $this
      */
-    public function omitErrors(bool $omitErrors = false)
+    public function omitErrors($omitErrors = false)
     {
         $this->_omitErrors = $omitErrors;
         return $this;
