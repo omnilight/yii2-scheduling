@@ -1,6 +1,6 @@
 <?php
 
-namespace omnilight\scheduling;
+namespace rubarbs\scheduling;
 use yii\console\Controller;
 use yii\di\Instance;
 

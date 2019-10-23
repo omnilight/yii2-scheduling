@@ -1,5 +1,5 @@
 {
-  "name": "omnilight/yii2-scheduling",
+  "name": "rubarbs/yii2-scheduling",
   "description": "Scheduling extension for Yii2 framework",
   "keywords": [
     "yii",
@@ -28,10 +28,10 @@
   },
   "autoload": {
     "psr-4": {
-      "omnilight\\scheduling\\": "src"
+      "rubarbs\\scheduling\\": "src"
     }
   },
   "extra": {
-    "bootstrap": "omnilight\\scheduling\\Bootstrap"
+    "bootstrap": "rubarbs\\scheduling\\Bootstrap"
   }
 }

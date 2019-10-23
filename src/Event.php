@@ -1,6 +1,6 @@
 <?php
 
-namespace omnilight\scheduling;
+namespace rubarbs\scheduling;
 
 use Cron\CronExpression;
 use GuzzleHttp\Client as HttpClient;
@@ -138,6 +138,7 @@ class Event extends Component
      * Run the command in the foreground.
      *
      * @param Application $app
+     * @throws \yii\base\InvalidConfigException
      */
     protected function runCommandInForeground(Application $app)
     {
@@ -174,6 +175,7 @@ class Event extends Component
      * Run the command in the background using exec.
      *
      * @param Application $app
+     * @throws \yii\base\InvalidConfigException
      */
     protected function runCommandInBackground(Application $app)
     {
@@ -186,6 +188,7 @@ class Event extends Component
      *
      * @param Application $app
      * @return bool
+     * @throws \Exception
      */
     public function isDue(Application $app)
     {
@@ -196,6 +199,7 @@ class Event extends Component
      * Determine if the Cron expression passes.
      *
      * @return bool
+     * @throws \Exception
      */
     protected function expressionPasses()
     {
@@ -555,6 +559,7 @@ class Event extends Component
      * Allow the event to only run on one server for each cron expression.
      *
      * @return $this
+     * @throws \yii\base\InvalidConfigException
      */
     public function onOneServer()
     {
@@ -625,7 +630,7 @@ class Event extends Component
      */
     public function emailOutputTo($addresses)
     {
-        if (is_null($this->_output) || $this->_output == $this->getDefaultOutput()) {
+        if ($this->_output === null || $this->_output == $this->getDefaultOutput()) {
             throw new InvalidCallException("Must direct output to a file in order to e-mail results.");
         }
         $addresses = is_array($addresses) ? $addresses : func_get_args();
@@ -726,7 +731,7 @@ class Event extends Component
 
     public function getDefaultOutput()
     {
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+        if (stripos(PHP_OS, 'WIN') === 0) {
             return 'NUL';
         } else {
             return '/dev/null';

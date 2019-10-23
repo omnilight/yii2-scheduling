@@ -1,6 +1,6 @@
 <?php
 
-namespace omnilight\scheduling;
+namespace rubarbs\scheduling;
 
 use Yii;
 use yii\base\Component;
@@ -35,6 +35,7 @@ class Schedule extends Component
     /**
      * Schedule constructor.
      * @param array $config
+     * @throws \yii\base\InvalidConfigException
      */
     public function __construct(array $config = [])
     {

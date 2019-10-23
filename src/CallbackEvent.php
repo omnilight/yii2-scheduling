@@ -1,6 +1,6 @@
 <?php
 
-namespace omnilight\scheduling;
+namespace rubarbs\scheduling;
 use Yii;
 use yii\base\Application;
 use yii\base\InvalidParamException;
@@ -61,7 +61,7 @@ class CallbackEvent extends Event
     {
         $this->trigger(self::EVENT_BEFORE_RUN);
         $response = call_user_func_array($this->callback, array_merge($this->parameters, [$app]));
-        parent::callAfterCallbacks($app);
+        $this->callAfterCallbacks($app);
         $this->trigger(self::EVENT_AFTER_RUN);
         return $response;
     }

@@ -1,8 +1,8 @@
 <?php
 
-namespace omnilight\scheduling\Tests;
+namespace rubarbs\scheduling\Tests;
 
-use omnilight\scheduling\Event;
+use rubarbs\scheduling\Event;
 use yii\mutex\Mutex;
 
 class EventTest extends \PHPUnit_Framework_TestCase
