@@ -10,8 +10,8 @@ use yii\base\Component;
 use yii\base\InvalidCallException;
 use yii\base\InvalidConfigException;
 use yii\mail\MailerInterface;
-use yii\mutex\Mutex;
 use yii\mutex\FileMutex;
+use yii\mutex\Mutex;
 
 /**
  * Class Event
@@ -156,6 +156,7 @@ class Event extends Component
     public function buildCommand()
     {
         $command = $this->command . $this->_redirect . $this->_output . ' ' . (($this->_omitErrors) ? ' 2>&1 &' : '');
+
         return $this->_user ? 'sudo -u ' . $this->_user . ' ' . $command : $command;
     }
 
@@ -207,6 +208,7 @@ class Event extends Component
         if ($this->_timezone) {
             $date->setTimezone($this->_timezone);
         }
+
         return CronExpression::factory($this->_expression)->isDue($date);
     }
 
@@ -218,11 +220,12 @@ class Event extends Component
      */
     protected function filtersPass(Application $app)
     {
-        if ($this->_filter && !call_user_func($this->_filter, $app) ||
+        if ($this->_filter && ! call_user_func($this->_filter, $app) ||
             $this->_reject && call_user_func($this->_reject, $app)
         ) {
             return false;
         }
+
         return true;
     }
 
@@ -245,6 +248,7 @@ class Event extends Component
     public function cron($expression)
     {
         $this->_expression = $expression;
+
         return $this;
     }
 
@@ -278,8 +282,9 @@ class Event extends Component
     public function dailyAt($time)
     {
         $segments = explode(':', $time);
-        return $this->spliceIntoPosition(2, (int)$segments[0])
-            ->spliceIntoPosition(1, count($segments) == 2 ? (int)$segments[1] : '0');
+
+        return $this->spliceIntoPosition(2, (int) $segments[0])
+            ->spliceIntoPosition(1, count($segments) == 2 ? (int) $segments[1] : '0');
     }
 
     /**
@@ -293,6 +298,7 @@ class Event extends Component
     {
         $segments = explode(' ', $this->_expression);
         $segments[$position - 1] = $value;
+
         return $this->cron(implode(' ', $segments));
     }
 
@@ -335,6 +341,7 @@ class Event extends Component
     public function days($days)
     {
         $days = is_array($days) ? $days : func_get_args();
+
         return $this->spliceIntoPosition(5, implode(',', $days));
     }
 
@@ -418,6 +425,7 @@ class Event extends Component
     public function weeklyOn($day, $time = '0:0')
     {
         $this->dailyAt($time);
+
         return $this->spliceIntoPosition(5, $day);
     }
 
@@ -441,6 +449,7 @@ class Event extends Component
     public function monthlyOn($day = 1, $time = '0:0')
     {
         $this->dailyAt($time);
+
         return $this->spliceIntoPosition(3, $day);
     }
 
@@ -472,7 +481,7 @@ class Event extends Component
      */
     public function everyNMinutes($minutes)
     {
-        return $this->cron('*/'.$minutes.' * * * * *');
+        return $this->cron('*/' . $minutes . ' * * * * *');
     }
 
     /**
@@ -514,6 +523,7 @@ class Event extends Component
     public function timezone($timezone)
     {
         $this->_timezone = $timezone;
+
         return $this;
     }
 
@@ -526,6 +536,7 @@ class Event extends Component
     public function user($user)
     {
         $this->_user = $user;
+
         return $this;
     }
 
@@ -538,6 +549,7 @@ class Event extends Component
     public function omitErrors($omitErrors = false)
     {
         $this->_omitErrors = $omitErrors;
+
         return $this;
     }
 
@@ -548,10 +560,10 @@ class Event extends Component
      */
     public function withoutOverlapping()
     {
-        return $this->then(function() {
+        return $this->then(function () {
             $this->_mutex->release($this->mutexName());
-        })->skip(function() {
-            return !$this->_mutex->acquire($this->mutexName());
+        })->skip(function () {
+            return ! $this->_mutex->acquire($this->mutexName());
         });
     }
 
@@ -579,6 +591,7 @@ class Event extends Component
     public function when(\Closure $callback)
     {
         $this->_filter = $callback;
+
         return $this;
     }
 
@@ -591,6 +604,7 @@ class Event extends Component
     public function skip(\Closure $callback)
     {
         $this->_reject = $callback;
+
         return $this;
     }
 
@@ -604,6 +618,7 @@ class Event extends Component
     {
         $this->_redirect = ' > ';
         $this->_output = $location;
+
         return $this;
     }
 
@@ -617,6 +632,7 @@ class Event extends Component
     {
         $this->_redirect = ' >> ';
         $this->_output = $location;
+
         return $this;
     }
 
@@ -631,9 +647,10 @@ class Event extends Component
     public function emailOutputTo($addresses)
     {
         if ($this->_output === null || $this->_output == $this->getDefaultOutput()) {
-            throw new InvalidCallException("Must direct output to a file in order to e-mail results.");
+            throw new InvalidCallException('Must direct output to a file in order to e-mail results.');
         }
         $addresses = is_array($addresses) ? $addresses : func_get_args();
+
         return $this->then(function (Application $app) use ($addresses) {
             $this->emailOutput($app->mailer, $addresses);
         });
@@ -648,6 +665,7 @@ class Event extends Component
     public function then(\Closure $callback)
     {
         $this->_afterCallbacks[] = $callback;
+
         return $this;
     }
 
@@ -661,7 +679,7 @@ class Event extends Component
     {
         $textBody = file_get_contents($this->_output);
 
-        if (trim($textBody) != '' ) {
+        if (trim($textBody) != '') {
             $mailer->compose()
                 ->setTextBody($textBody)
                 ->setSubject($this->getEmailSubject())
@@ -680,6 +698,7 @@ class Event extends Component
         if ($this->_description) {
             return 'Scheduled Job Output (' . $this->_description . ')';
         }
+
         return 'Scheduled Job Output';
     }
 
@@ -692,7 +711,7 @@ class Event extends Component
     public function thenPing($url)
     {
         return $this->then(function () use ($url) {
-            (new HttpClient)->get($url);
+            (new HttpClient())->get($url);
         });
     }
 
@@ -705,6 +724,7 @@ class Event extends Component
     public function description($description)
     {
         $this->_description = $description;
+
         return $this;
     }
 
@@ -715,7 +735,10 @@ class Event extends Component
      */
     public function getSummaryForDisplay()
     {
-        if (is_string($this->_description)) return $this->_description;
+        if (is_string($this->_description)) {
+            return $this->_description;
+        }
+
         return $this->buildCommand();
     }
 
@@ -733,8 +756,8 @@ class Event extends Component
     {
         if (stripos(PHP_OS, 'WIN') === 0) {
             return 'NUL';
-        } else {
-            return '/dev/null';
         }
+
+        return '/dev/null';
     }
 }

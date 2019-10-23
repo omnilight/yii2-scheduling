@@ -1,6 +1,7 @@
 <?php
 
 namespace rubarbs\scheduling;
+
 use Yii;
 use yii\base\Application;
 use yii\base\InvalidParamException;
@@ -39,14 +40,13 @@ class CallbackEvent extends Event
         $this->parameters = $parameters;
         $this->_mutex = $mutex;
 
-        if (!empty($config)) {
+        if (! empty($config)) {
             Yii::configure($this, $config);
         }
 
-        if ( ! is_string($this->callback) && ! is_callable($this->callback))
-        {
+        if (! is_string($this->callback) && ! is_callable($this->callback)) {
             throw new InvalidParamException(
-                "Invalid scheduled callback event. Must be string or callable."
+                'Invalid scheduled callback event. Must be string or callable.'
             );
         }
     }
@@ -63,6 +63,7 @@ class CallbackEvent extends Event
         $response = call_user_func_array($this->callback, array_merge($this->parameters, [$app]));
         $this->callAfterCallbacks($app);
         $this->trigger(self::EVENT_AFTER_RUN);
+
         return $response;
     }
 
@@ -100,8 +101,10 @@ class CallbackEvent extends Event
      */
     public function getSummaryForDisplay()
     {
-        if (is_string($this->_description)) return $this->_description;
+        if (is_string($this->_description)) {
+            return $this->_description;
+        }
+
         return is_string($this->callback) ? $this->callback : 'Closure';
     }
-
 }

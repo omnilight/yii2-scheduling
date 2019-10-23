@@ -1,9 +1,9 @@
 <?php
 
 namespace rubarbs\scheduling;
+
 use yii\console\Controller;
 use yii\di\Instance;
-
 
 /**
  * Run the scheduled commands
@@ -31,7 +31,6 @@ class ScheduleController extends Controller
         );
     }
 
-
     public function init()
     {
         if (\Yii::$app->has($this->schedule)) {
@@ -42,7 +41,6 @@ class ScheduleController extends Controller
         parent::init();
     }
 
-
     public function actionRun()
     {
         $this->importScheduleFile();
@@ -51,12 +49,11 @@ class ScheduleController extends Controller
 
         foreach ($events as $event) {
             $event->omitErrors($this->omitErrors);
-            $this->stdout('Running scheduled command: '.$event->getSummaryForDisplay()."\n");
+            $this->stdout('Running scheduled command: ' . $event->getSummaryForDisplay() . "\n");
             $event->run(\Yii::$app);
         }
 
-        if (count($events) === 0)
-        {
+        if (count($events) === 0) {
             $this->stdout("No scheduled commands are ready to run.\n");
         }
     }
@@ -69,12 +66,13 @@ class ScheduleController extends Controller
 
         $scheduleFile = \Yii::getAlias($this->scheduleFile);
         if (file_exists($scheduleFile) == false) {
-            $this->stderr('Can not load schedule file '.$this->scheduleFile."\n");
+            $this->stderr('Can not load schedule file ' . $this->scheduleFile . "\n");
+
             return;
         }
 
         $schedule = $this->schedule;
-        call_user_func(function() use ($schedule, $scheduleFile) {
+        call_user_func(function () use ($schedule, $scheduleFile) {
             include $scheduleFile;
         });
     }

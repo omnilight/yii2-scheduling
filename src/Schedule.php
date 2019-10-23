@@ -3,10 +3,9 @@
 namespace rubarbs\scheduling;
 
 use Yii;
-use yii\base\Component;
 use yii\base\Application;
+use yii\base\Component;
 use yii\mutex\FileMutex;
-
 
 /**
  * Class Schedule
@@ -51,11 +50,13 @@ class Schedule extends Component
      * @param  array   $parameters
      * @return Event
      */
-    public function call($callback, array $parameters = array())
+    public function call($callback, array $parameters = [])
     {
         $this->_events[] = $event = new CallbackEvent($this->_mutex, $callback, $parameters);
+
         return $event;
     }
+
     /**
      * Add a new cli command event to the schedule.
      *
@@ -76,6 +77,7 @@ class Schedule extends Component
     public function exec($command)
     {
         $this->_events[] = $event = new Event($this->_mutex, $command);
+
         return $event;
     }
 
@@ -92,8 +94,7 @@ class Schedule extends Component
      */
     public function dueEvents(Application $app)
     {
-        return array_filter($this->_events, function(Event $event) use ($app)
-        {
+        return array_filter($this->_events, function (Event $event) use ($app) {
             return $event->isDue($app);
         });
     }
