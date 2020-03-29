@@ -18,6 +18,8 @@ use yii\mutex\FileMutex;
  */
 class Event extends Component
 {
+    use ManagesFrequencies;
+
     const EVENT_BEFORE_RUN = 'beforeRun';
     const EVENT_AFTER_RUN = 'afterRun';
 
@@ -31,7 +33,7 @@ class Event extends Component
      *
      * @var string
      */
-    protected $_expression = '* * * * * *';
+    protected $_expression = '* * * * *';
     /**
      * The timezone the date should be evaluated on.
      *
@@ -83,7 +85,7 @@ class Event extends Component
     /**
      * The mutex implementation.
      *
-     * @var \yii\mutex\Mutex
+     * @var Mutex
      */
     protected $_mutex;
 
@@ -112,6 +114,7 @@ class Event extends Component
     /**
      * Run the given event.
      * @param Application $app
+     * @throws InvalidConfigException
      */
     public function run(Application $app)
     {
@@ -138,6 +141,7 @@ class Event extends Component
      * Run the command in the foreground.
      *
      * @param Application $app
+     * @throws InvalidConfigException
      */
     protected function runCommandInForeground(Application $app)
     {
@@ -220,284 +224,6 @@ class Event extends Component
             return false;
         }
         return true;
-    }
-
-    /**
-     * Schedule the event to run hourly.
-     *
-     * @return $this
-     */
-    public function hourly()
-    {
-        return $this->cron('0 * * * * *');
-    }
-
-    /**
-     * The Cron expression representing the event's frequency.
-     *
-     * @param  string $expression
-     * @return $this
-     */
-    public function cron($expression)
-    {
-        $this->_expression = $expression;
-        return $this;
-    }
-
-    /**
-     * Schedule the event to run daily.
-     *
-     * @return $this
-     */
-    public function daily()
-    {
-        return $this->cron('0 0 * * * *');
-    }
-
-    /**
-     * Schedule the command at a given time.
-     *
-     * @param  string $time
-     * @return $this
-     */
-    public function at($time)
-    {
-        return $this->dailyAt($time);
-    }
-
-    /**
-     * Schedule the event to run daily at a given time (10:00, 19:30, etc).
-     *
-     * @param  string $time
-     * @return $this
-     */
-    public function dailyAt($time)
-    {
-        $segments = explode(':', $time);
-        return $this->spliceIntoPosition(2, (int)$segments[0])
-            ->spliceIntoPosition(1, count($segments) == 2 ? (int)$segments[1] : '0');
-    }
-
-    /**
-     * Splice the given value into the given position of the expression.
-     *
-     * @param  int $position
-     * @param  string $value
-     * @return Event
-     */
-    protected function spliceIntoPosition($position, $value)
-    {
-        $segments = explode(' ', $this->_expression);
-        $segments[$position - 1] = $value;
-        return $this->cron(implode(' ', $segments));
-    }
-
-    /**
-     * Schedule the event to run twice daily.
-     *
-     * @return $this
-     */
-    public function twiceDaily()
-    {
-        return $this->cron('0 1,13 * * * *');
-    }
-
-    /**
-     * Schedule the event to run only on weekdays.
-     *
-     * @return $this
-     */
-    public function weekdays()
-    {
-        return $this->spliceIntoPosition(5, '1-5');
-    }
-
-    /**
-     * Schedule the event to run only on Mondays.
-     *
-     * @return $this
-     */
-    public function mondays()
-    {
-        return $this->days(1);
-    }
-
-    /**
-     * Set the days of the week the command should run on.
-     *
-     * @param  array|int $days
-     * @return $this
-     */
-    public function days($days)
-    {
-        $days = is_array($days) ? $days : func_get_args();
-        return $this->spliceIntoPosition(5, implode(',', $days));
-    }
-
-    /**
-     * Schedule the event to run only on Tuesdays.
-     *
-     * @return $this
-     */
-    public function tuesdays()
-    {
-        return $this->days(2);
-    }
-
-    /**
-     * Schedule the event to run only on Wednesdays.
-     *
-     * @return $this
-     */
-    public function wednesdays()
-    {
-        return $this->days(3);
-    }
-
-    /**
-     * Schedule the event to run only on Thursdays.
-     *
-     * @return $this
-     */
-    public function thursdays()
-    {
-        return $this->days(4);
-    }
-
-    /**
-     * Schedule the event to run only on Fridays.
-     *
-     * @return $this
-     */
-    public function fridays()
-    {
-        return $this->days(5);
-    }
-
-    /**
-     * Schedule the event to run only on Saturdays.
-     *
-     * @return $this
-     */
-    public function saturdays()
-    {
-        return $this->days(6);
-    }
-
-    /**
-     * Schedule the event to run only on Sundays.
-     *
-     * @return $this
-     */
-    public function sundays()
-    {
-        return $this->days(0);
-    }
-
-    /**
-     * Schedule the event to run weekly.
-     *
-     * @return $this
-     */
-    public function weekly()
-    {
-        return $this->cron('0 0 * * 0 *');
-    }
-
-    /**
-     * Schedule the event to run weekly on a given day and time.
-     *
-     * @param  int $day
-     * @param  string $time
-     * @return $this
-     */
-    public function weeklyOn($day, $time = '0:0')
-    {
-        $this->dailyAt($time);
-        return $this->spliceIntoPosition(5, $day);
-    }
-
-    /**
-     * Schedule the event to run monthly.
-     *
-     * @return $this
-     */
-    public function monthly()
-    {
-        return $this->cron('0 0 1 * * *');
-    }
-
-    /**
-     * Schedule the event to run yearly.
-     *
-     * @return $this
-     */
-    public function yearly()
-    {
-        return $this->cron('0 0 1 1 * *');
-    }
-
-    /**
-     * Schedule the event to run every minute.
-     *
-     * @return $this
-     */
-    public function everyMinute()
-    {
-        return $this->cron('* * * * * *');
-    }
-
-    /**
-     * Schedule the event to run every N minutes.
-     *
-     * @param int|string $minutes
-     * @return $this
-     */
-    public function everyNMinutes($minutes)
-    {
-        return $this->cron('*/'.$minutes.' * * * * *');
-    }
-
-    /**
-     * Schedule the event to run every five minutes.
-     *
-     * @return $this
-     */
-    public function everyFiveMinutes()
-    {
-        return $this->everyNMinutes(5);
-    }
-
-    /**
-     * Schedule the event to run every ten minutes.
-     *
-     * @return $this
-     */
-    public function everyTenMinutes()
-    {
-        return $this->everyNMinutes(10);
-    }
-
-    /**
-     * Schedule the event to run every thirty minutes.
-     *
-     * @return $this
-     */
-    public function everyThirtyMinutes()
-    {
-        return $this->cron('0,30 * * * * *');
-    }
-
-    /**
-     * Set the timezone the date should be evaluated on.
-     *
-     * @param  \DateTimeZone|string $timezone
-     * @return $this
-     */
-    public function timezone($timezone)
-    {
-        $this->_timezone = $timezone;
-        return $this;
     }
 
     /**
