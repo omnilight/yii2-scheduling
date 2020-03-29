@@ -154,7 +154,7 @@ class Event extends Component
      */
     public function buildCommand()
     {
-        $command = $this->command . $this->_redirect . $this->_output . ' ' . (($this->_omitErrors) ? ' 2>&1 &' : '');
+        $command = $this->command . $this->_redirect . $this->_output . (($this->_omitErrors) ? ' 2>&1 &' : '');
         return $this->_user ? 'sudo -u ' . $this->_user . ' ' . $command : $command;
     }
 
