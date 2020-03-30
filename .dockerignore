@@ -1,0 +1,8 @@
+vendor
+.idea
+.dockerignore
+.git*
+.travis.yml
+composer.lock
+docker-compose.yml
+Dockerfile
