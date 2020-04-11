@@ -35,7 +35,7 @@ class Event extends Component
     /**
      * The timezone the date should be evaluated on.
      *
-     * @var \DateTimeZone|string
+     * @var \DateTimeZone
      */
     protected $_timezone;
     /**
@@ -199,10 +199,7 @@ class Event extends Component
      */
     protected function expressionPasses()
     {
-        $date = new \DateTime('now');
-        if ($this->_timezone) {
-            $date->setTimezone($this->_timezone);
-        }
+        $date = new \DateTime('now', $this->_timezone);
         return CronExpression::factory($this->_expression)->isDue($date);
     }
 
@@ -491,10 +488,10 @@ class Event extends Component
     /**
      * Set the timezone the date should be evaluated on.
      *
-     * @param  \DateTimeZone|string $timezone
+     * @param  \DateTimeZone $timezone
      * @return $this
      */
-    public function timezone($timezone)
+    public function timezone(\DateTimeZone $timezone)
     {
         $this->_timezone = $timezone;
         return $this;
