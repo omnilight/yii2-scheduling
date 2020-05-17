@@ -20,9 +20,10 @@ class ScheduleController extends Controller
     public $scheduleFile;
 
     /**
-     * @var bool set to true to avoid error output
+     * @var bool|null set to true to avoid error output.
+     * Note: if not null, the specified value will be applied globally for all commands
      */
-    public $omitErrors = false;
+    public $omitErrors;
 
     public function options($actionID)
     {
@@ -50,7 +51,9 @@ class ScheduleController extends Controller
         $events = $this->schedule->dueEvents(\Yii::$app);
 
         foreach ($events as $event) {
-            $event->omitErrors($this->omitErrors);
+            if ($this->omitErrors !== null) {
+                $event->omitErrors($this->omitErrors);
+            }
             $this->stdout('Running scheduled command: '.$event->getSummaryForDisplay()."\n");
             $event->run(\Yii::$app);
         }
