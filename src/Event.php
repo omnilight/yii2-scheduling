@@ -5,6 +5,7 @@ namespace lexeo\yii2scheduling;
 use Closure;
 use Cron\CronExpression;
 use DateTime;
+use DateTimeZone;
 use GuzzleHttp\Client as HttpClient;
 use Symfony\Component\Process\Process;
 use yii\base\Application;
@@ -37,7 +38,7 @@ class Event extends Component
     /**
      * The timezone the date should be evaluated on.
      *
-     * @var \DateTimeZone|string
+     * @var DateTimeZone|null
      */
     protected $timezone;
     /**
@@ -205,10 +206,7 @@ class Event extends Component
      */
     protected function expressionPasses()
     {
-        $date = new DateTime('now');
-        if ($this->timezone) {
-            $date->setTimezone($this->timezone);
-        }
+        $date = new DateTime('now', $this->timezone);
         return CronExpression::factory($this->expression)->isDue($date);
     }
 
@@ -497,12 +495,12 @@ class Event extends Component
     /**
      * Set the timezone the date should be evaluated on.
      *
-     * @param \DateTimeZone|string $timezone
+     * @param DateTimeZone|string $timezone
      * @return $this
      */
     public function timezone($timezone)
     {
-        $this->timezone = $timezone;
+        $this->timezone = $timezone instanceof DateTimeZone ? $timezone : new DateTimeZone($timezone);
         return $this;
     }
 
