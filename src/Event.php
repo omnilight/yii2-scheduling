@@ -2,7 +2,9 @@
 
 namespace lexeo\yii2scheduling;
 
+use Closure;
 use Cron\CronExpression;
+use DateTime;
 use GuzzleHttp\Client as HttpClient;
 use Symfony\Component\Process\Process;
 use yii\base\Application;
@@ -31,68 +33,68 @@ class Event extends Component
      *
      * @var string
      */
-    protected $_expression = '* * * * * *';
+    protected $expression = '* * * * * *';
     /**
      * The timezone the date should be evaluated on.
      *
      * @var \DateTimeZone|string
      */
-    protected $_timezone;
+    protected $timezone;
     /**
      * The user the command should run as.
      *
      * @var string
      */
-    protected $_user;
+    protected $user;
     /**
      * The filter callback.
      *
-     * @var \Closure
+     * @var Closure
      */
-    protected $_filter;
+    protected $filter;
     /**
      * The reject callback.
      *
-     * @var \Closure
+     * @var Closure
      */
-    protected $_reject;
+    protected $reject;
     /**
      * The location that output should be sent to.
      *
      * @var string
      */
-    protected $_output = null;
+    protected $output;
     /**
      * The string for redirection.
      *
      * @var array
      */
-    protected $_redirect = ' > ';
+    protected $redirect = ' > ';
     /**
      * The array of callbacks to be run after the event is finished.
      *
      * @var array
      */
-    protected $_afterCallbacks = [];
+    protected $afterCallbacks = [];
     /**
      * The human readable description of the event.
      *
      * @var string
      */
-    protected $_description;
+    protected $description;
     /**
      * The mutex implementation.
      *
-     * @var \yii\mutex\Mutex
+     * @var Mutex
      */
-    protected $_mutex;
+    protected $mutex;
 
     /**
      * Decide if errors will be displayed.
      *
      * @var bool
      */
-    protected $_omitErrors = false;
+    protected $omitErrors = false;
 
     /**
      * Create a new event instance.
@@ -104,8 +106,8 @@ class Event extends Component
     public function __construct(Mutex $mutex, $command, $config = [])
     {
         $this->command = $command;
-        $this->_mutex = $mutex;
-        $this->_output = $this->getDefaultOutput();
+        $this->mutex = $mutex;
+        $this->output = $this->getDefaultOutput();
         parent::__construct($config);
     }
 
@@ -116,7 +118,7 @@ class Event extends Component
     public function run(Application $app)
     {
         $this->trigger(self::EVENT_BEFORE_RUN);
-        if (count($this->_afterCallbacks) > 0) {
+        if (count($this->afterCallbacks) > 0) {
             $this->runCommandInForeground($app);
         } else {
             $this->runCommandInBackground($app);
@@ -131,7 +133,7 @@ class Event extends Component
      */
     protected function mutexName()
     {
-        return 'framework/schedule-' . sha1($this->_expression . $this->command);
+        return 'framework/schedule-' . sha1($this->expression . $this->command);
     }
 
     /**
@@ -142,20 +144,24 @@ class Event extends Component
     protected function runCommandInForeground(Application $app)
     {
         (new Process(
-            trim($this->buildCommand(), '& '), dirname($app->request->getScriptFile()), null, null, null
+            trim($this->buildCommand(), '& '),
+            dirname($app->request->getScriptFile()),
+            null,
+            null,
+            null
         ))->run();
         $this->callAfterCallbacks($app);
     }
 
     /**
-     * Build the comand string.
+     * Build the command string.
      *
      * @return string
      */
     public function buildCommand()
     {
-        $command = $this->command . $this->_redirect . $this->_output . (($this->_omitErrors) ? ' 2>&1 &' : '');
-        return $this->_user ? 'sudo -u ' . $this->_user . ' ' . $command : $command;
+        $command = $this->command . $this->redirect . $this->output . (($this->omitErrors) ? ' 2>&1 &' : '');
+        return $this->user ? 'sudo -u ' . $this->user . ' ' . $command : $command;
     }
 
     /**
@@ -165,7 +171,7 @@ class Event extends Component
      */
     protected function callAfterCallbacks(Application $app)
     {
-        foreach ($this->_afterCallbacks as $callback) {
+        foreach ($this->afterCallbacks as $callback) {
             call_user_func($callback, $app);
         }
     }
@@ -199,11 +205,11 @@ class Event extends Component
      */
     protected function expressionPasses()
     {
-        $date = new \DateTime('now');
-        if ($this->_timezone) {
-            $date->setTimezone($this->_timezone);
+        $date = new DateTime('now');
+        if ($this->timezone) {
+            $date->setTimezone($this->timezone);
         }
-        return CronExpression::factory($this->_expression)->isDue($date);
+        return CronExpression::factory($this->expression)->isDue($date);
     }
 
     /**
@@ -214,8 +220,8 @@ class Event extends Component
      */
     protected function filtersPass(Application $app)
     {
-        if ($this->_filter && !call_user_func($this->_filter, $app) ||
-            $this->_reject && call_user_func($this->_reject, $app)
+        if (($this->filter && !call_user_func($this->filter, $app))
+            || ($this->reject && call_user_func($this->reject, $app))
         ) {
             return false;
         }
@@ -235,12 +241,12 @@ class Event extends Component
     /**
      * The Cron expression representing the event's frequency.
      *
-     * @param  string $expression
+     * @param string $expression
      * @return $this
      */
     public function cron($expression)
     {
-        $this->_expression = $expression;
+        $this->expression = $expression;
         return $this;
     }
 
@@ -257,7 +263,7 @@ class Event extends Component
     /**
      * Schedule the command at a given time.
      *
-     * @param  string $time
+     * @param string $time
      * @return $this
      */
     public function at($time)
@@ -268,26 +274,26 @@ class Event extends Component
     /**
      * Schedule the event to run daily at a given time (10:00, 19:30, etc).
      *
-     * @param  string $time
+     * @param string $time
      * @return $this
      */
     public function dailyAt($time)
     {
         $segments = explode(':', $time);
         return $this->spliceIntoPosition(2, (int)$segments[0])
-            ->spliceIntoPosition(1, count($segments) == 2 ? (int)$segments[1] : '0');
+            ->spliceIntoPosition(1, count($segments) === 2 ? (int)$segments[1] : '0');
     }
 
     /**
      * Splice the given value into the given position of the expression.
      *
-     * @param  int $position
-     * @param  string $value
+     * @param int $position
+     * @param string $value
      * @return Event
      */
     protected function spliceIntoPosition($position, $value)
     {
-        $segments = explode(' ', $this->_expression);
+        $segments = explode(' ', $this->expression);
         $segments[$position - 1] = $value;
         return $this->cron(implode(' ', $segments));
     }
@@ -325,7 +331,7 @@ class Event extends Component
     /**
      * Set the days of the week the command should run on.
      *
-     * @param  array|int $days
+     * @param array|int $days
      * @return $this
      */
     public function days($days)
@@ -407,8 +413,8 @@ class Event extends Component
     /**
      * Schedule the event to run weekly on a given day and time.
      *
-     * @param  int $day
-     * @param  string $time
+     * @param int $day
+     * @param string $time
      * @return $this
      */
     public function weeklyOn($day, $time = '0:0')
@@ -455,7 +461,7 @@ class Event extends Component
      */
     public function everyNMinutes($minutes)
     {
-        return $this->cron('*/'.$minutes.' * * * * *');
+        return $this->cron('*/' . $minutes . ' * * * * *');
     }
 
     /**
@@ -491,36 +497,36 @@ class Event extends Component
     /**
      * Set the timezone the date should be evaluated on.
      *
-     * @param  \DateTimeZone|string $timezone
+     * @param \DateTimeZone|string $timezone
      * @return $this
      */
     public function timezone($timezone)
     {
-        $this->_timezone = $timezone;
+        $this->timezone = $timezone;
         return $this;
     }
 
     /**
      * Set which user the command should run as.
      *
-     * @param  string $user
+     * @param string $user
      * @return $this
      */
     public function user($user)
     {
-        $this->_user = $user;
+        $this->user = $user;
         return $this;
     }
 
     /**
      * Set if errors should be displayed
      *
-     * @param  bool $omitErrors
+     * @param bool $omitErrors
      * @return $this
      */
     public function omitErrors($omitErrors = false)
     {
-        $this->_omitErrors = $omitErrors;
+        $this->omitErrors = $omitErrors;
         return $this;
     }
 
@@ -531,10 +537,10 @@ class Event extends Component
      */
     public function withoutOverlapping()
     {
-        return $this->then(function() {
-            $this->_mutex->release($this->mutexName());
-        })->skip(function() {
-            return !$this->_mutex->acquire($this->mutexName());
+        return $this->then(function () {
+            $this->mutex->release($this->mutexName());
+        })->skip(function () {
+            return !$this->mutex->acquire($this->mutexName());
         });
     }
 
@@ -545,8 +551,10 @@ class Event extends Component
      */
     public function onOneServer()
     {
-        if ($this->_mutex instanceof FileMutex) {
-            throw new InvalidConfigException('You must config mutex in the application component, except the FileMutex.');
+        if ($this->mutex instanceof FileMutex) {
+            throw new InvalidConfigException(
+                'You must config mutex in the application component, except the FileMutex.'
+            );
         }
 
         return $this->withoutOverlapping();
@@ -555,64 +563,64 @@ class Event extends Component
     /**
      * Register a callback to further filter the schedule.
      *
-     * @param  \Closure $callback
+     * @param Closure $callback
      * @return $this
      */
-    public function when(\Closure $callback)
+    public function when(Closure $callback)
     {
-        $this->_filter = $callback;
+        $this->filter = $callback;
         return $this;
     }
 
     /**
      * Register a callback to further filter the schedule.
      *
-     * @param  \Closure $callback
+     * @param Closure $callback
      * @return $this
      */
-    public function skip(\Closure $callback)
+    public function skip(Closure $callback)
     {
-        $this->_reject = $callback;
+        $this->reject = $callback;
         return $this;
     }
 
     /**
      * Send the output of the command to a given location.
      *
-     * @param  string $location
+     * @param string $location
      * @return $this
      */
     public function sendOutputTo($location)
     {
-        $this->_redirect = ' > ';
-        $this->_output = $location;
+        $this->redirect = ' > ';
+        $this->output = $location;
         return $this;
     }
 
     /**
      * Append the output of the command to a given location.
      *
-     * @param  string $location
+     * @param string $location
      * @return $this
      */
     public function appendOutputTo($location)
     {
-        $this->_redirect = ' >> ';
-        $this->_output = $location;
+        $this->redirect = ' >> ';
+        $this->output = $location;
         return $this;
     }
 
     /**
      * E-mail the results of the scheduled operation.
      *
-     * @param  array $addresses
+     * @param array $addresses
      * @return $this
      *
-     * @throws \LogicException
+     * @throws InvalidCallException
      */
     public function emailOutputTo($addresses)
     {
-        if (is_null($this->_output) || $this->_output == $this->getDefaultOutput()) {
+        if (is_null($this->output) || $this->output === $this->getDefaultOutput()) {
             throw new InvalidCallException("Must direct output to a file in order to e-mail results.");
         }
         $addresses = is_array($addresses) ? $addresses : func_get_args();
@@ -624,12 +632,12 @@ class Event extends Component
     /**
      * Register a callback to be called after the operation.
      *
-     * @param  \Closure $callback
+     * @param Closure $callback
      * @return $this
      */
-    public function then(\Closure $callback)
+    public function then(Closure $callback)
     {
-        $this->_afterCallbacks[] = $callback;
+        $this->afterCallbacks[] = $callback;
         return $this;
     }
 
@@ -637,13 +645,13 @@ class Event extends Component
      * E-mail the output of the event to the recipients.
      *
      * @param MailerInterface $mailer
-     * @param  array $addresses
+     * @param array $addresses
      */
     protected function emailOutput(MailerInterface $mailer, $addresses)
     {
-        $textBody = file_get_contents($this->_output);
+        $textBody = file_get_contents($this->output);
 
-        if (trim($textBody) != '' ) {
+        if (trim($textBody) !== '') {
             $mailer->compose()
                 ->setTextBody($textBody)
                 ->setSubject($this->getEmailSubject())
@@ -659,8 +667,8 @@ class Event extends Component
      */
     protected function getEmailSubject()
     {
-        if ($this->_description) {
-            return 'Scheduled Job Output (' . $this->_description . ')';
+        if ($this->description) {
+            return 'Scheduled Job Output (' . $this->description . ')';
         }
         return 'Scheduled Job Output';
     }
@@ -668,12 +676,12 @@ class Event extends Component
     /**
      * Register a callback to the ping a given URL after the job runs.
      *
-     * @param  string $url
+     * @param string $url
      * @return $this
      */
     public function thenPing($url)
     {
-        return $this->then(function () use ($url) {
+        return $this->then(static function () use ($url) {
             (new HttpClient)->get($url);
         });
     }
@@ -681,12 +689,12 @@ class Event extends Component
     /**
      * Set the human-friendly description of the event.
      *
-     * @param  string $description
+     * @param string $description
      * @return $this
      */
     public function description($description)
     {
-        $this->_description = $description;
+        $this->description = $description;
         return $this;
     }
 
@@ -697,7 +705,9 @@ class Event extends Component
      */
     public function getSummaryForDisplay()
     {
-        if (is_string($this->_description)) return $this->_description;
+        if (is_string($this->description)) {
+            return $this->description;
+        }
         return $this->buildCommand();
     }
 
@@ -708,15 +718,14 @@ class Event extends Component
      */
     public function getExpression()
     {
-        return $this->_expression;
+        return $this->expression;
     }
 
     public function getDefaultOutput()
     {
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+        if (stripos(PHP_OS, 'WIN') === 0) {
             return 'NUL';
-        } else {
-            return '/dev/null';
         }
+        return '/dev/null';
     }
 }

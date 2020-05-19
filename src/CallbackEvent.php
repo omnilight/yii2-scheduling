@@ -38,14 +38,13 @@ class CallbackEvent extends Event
     {
         $this->callback = $callback;
         $this->parameters = $parameters;
-        $this->_mutex = $mutex;
+        $this->mutex = $mutex;
 
         if (!empty($config)) {
             Yii::configure($this, $config);
         }
 
-        if ( ! is_string($this->callback) && ! is_callable($this->callback))
-        {
+        if (!is_string($this->callback) && !is_callable($this->callback)) {
             throw new InvalidParamException(
                 "Invalid scheduled callback event. Must be string or callable."
             );
@@ -62,7 +61,7 @@ class CallbackEvent extends Event
     {
         $this->trigger(self::EVENT_BEFORE_RUN);
         $response = call_user_func_array($this->callback, array_merge($this->parameters, [$app]));
-        parent::callAfterCallbacks($app);
+        $this->callAfterCallbacks($app);
         $this->trigger(self::EVENT_AFTER_RUN);
         return $response;
     }
@@ -75,7 +74,7 @@ class CallbackEvent extends Event
      */
     public function withoutOverlapping()
     {
-        if (empty($this->_description)) {
+        if (empty($this->description)) {
             throw new InvalidParamException(
                 "A scheduled event name is required to prevent overlapping. Use the 'description' method before 'withoutOverlapping'."
             );
@@ -91,7 +90,7 @@ class CallbackEvent extends Event
      */
     protected function mutexName()
     {
-        return 'framework/schedule-' . sha1($this->_description);
+        return 'framework/schedule-' . sha1($this->description);
     }
 
     /**
@@ -101,7 +100,9 @@ class CallbackEvent extends Event
      */
     public function getSummaryForDisplay()
     {
-        if (is_string($this->_description)) return $this->_description;
+        if (is_string($this->description)) {
+            return $this->description;
+        }
         return is_string($this->callback) ? $this->callback : 'Closure';
     }
 

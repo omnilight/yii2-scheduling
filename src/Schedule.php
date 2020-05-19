@@ -6,6 +6,7 @@ use Yii;
 use yii\base\Component;
 use yii\base\Application;
 use yii\mutex\FileMutex;
+use yii\mutex\Mutex;
 
 
 /**
@@ -18,14 +19,14 @@ class Schedule extends Component
      *
      * @var Event[]
      */
-    protected $_events = [];
+    protected $events = [];
 
     /**
      * The mutex implementation.
      *
-     * @var \yii\mutex\Mutex
+     * @var Mutex
      */
-    protected $_mutex;
+    protected $mutex;
 
     /**
      * @var string The name of cli script
@@ -38,7 +39,7 @@ class Schedule extends Component
      */
     public function __construct(array $config = [])
     {
-        $this->_mutex = Yii::$app->has('mutex') ? Yii::$app->get('mutex') : (new FileMutex());
+        $this->mutex = Yii::$app->has('mutex') ? Yii::$app->get('mutex') : (new FileMutex());
 
         parent::__construct($config);
     }
@@ -46,19 +47,20 @@ class Schedule extends Component
     /**
      * Add a new callback event to the schedule.
      *
-     * @param  string  $callback
-     * @param  array   $parameters
+     * @param string $callback
+     * @param array $parameters
      * @return Event
      */
-    public function call($callback, array $parameters = array())
+    public function call($callback, array $parameters = [])
     {
-        $this->_events[] = $event = new CallbackEvent($this->_mutex, $callback, $parameters);
+        $this->events[] = $event = new CallbackEvent($this->mutex, $callback, $parameters);
         return $event;
     }
+
     /**
      * Add a new cli command event to the schedule.
      *
-     * @param  string  $command
+     * @param string $command
      * @return Event
      */
     public function command($command)
@@ -69,30 +71,29 @@ class Schedule extends Component
     /**
      * Add a new command event to the schedule.
      *
-     * @param  string  $command
+     * @param string $command
      * @return Event
      */
     public function exec($command)
     {
-        $this->_events[] = $event = new Event($this->_mutex, $command);
+        $this->events[] = $event = new Event($this->mutex, $command);
         return $event;
     }
 
     public function getEvents()
     {
-        return $this->_events;
+        return $this->events;
     }
 
     /**
      * Get all of the events on the schedule that are due.
      *
-     * @param \yii\base\Application $app
+     * @param Application $app
      * @return Event[]
      */
     public function dueEvents(Application $app)
     {
-        return array_filter($this->_events, function(Event $event) use ($app)
-        {
+        return array_filter($this->events, static function (Event $event) use ($app) {
             return $event->isDue($app);
         });
     }
