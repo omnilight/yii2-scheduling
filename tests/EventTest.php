@@ -1,8 +1,8 @@
 <?php
 
-namespace omnilight\scheduling\Tests;
+namespace lexeo\yii2scheduling\tests;
 
-use omnilight\scheduling\Event;
+use lexeo\yii2scheduling\Event;
 use yii\mutex\Mutex;
 
 class EventTest extends \PHPUnit_Framework_TestCase

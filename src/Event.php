@@ -1,6 +1,6 @@
 <?php
 
-namespace omnilight\scheduling;
+namespace lexeo\yii2scheduling;
 
 use Cron\CronExpression;
 use GuzzleHttp\Client as HttpClient;

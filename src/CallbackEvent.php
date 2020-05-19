@@ -1,6 +1,7 @@
 <?php
 
-namespace omnilight\scheduling;
+namespace lexeo\yii2scheduling;
+
 use Yii;
 use yii\base\Application;
 use yii\base\InvalidParamException;
