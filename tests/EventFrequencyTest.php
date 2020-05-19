@@ -2,12 +2,12 @@
 
 namespace lexeo\yii2scheduling\tests;
 
-use lexeo\yii2scheduling\Event;
+use lexeo\yii2scheduling\AbstractEvent;
 
 class EventFrequencyTest extends AbstractTestCase
 {
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|Event
+     * @var \PHPUnit_Framework_MockObject_MockObject|AbstractEvent
      */
     protected $eventMock;
 
@@ -17,7 +17,7 @@ class EventFrequencyTest extends AbstractTestCase
     protected function setUp()
     {
         parent::setUp();
-        $this->eventMock = $this->getMock(Event::className(), null, [], '', false);
+        $this->eventMock = $this->getMockForAbstractClass('lexeo\yii2scheduling\AbstractEvent');
     }
 
 

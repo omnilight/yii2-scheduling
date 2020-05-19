@@ -17,7 +17,7 @@ class Schedule extends Component
     /**
      * All of the events on the schedule.
      *
-     * @var Event[]
+     * @var AbstractEvent[]
      */
     protected $events = [];
 
@@ -49,7 +49,7 @@ class Schedule extends Component
      *
      * @param string $callback
      * @param array $parameters
-     * @return Event
+     * @return CallbackEvent
      */
     public function call($callback, array $parameters = [])
     {
@@ -80,6 +80,9 @@ class Schedule extends Component
         return $event;
     }
 
+    /**
+     * @return AbstractEvent[]
+     */
     public function getEvents()
     {
         return $this->events;
@@ -89,11 +92,11 @@ class Schedule extends Component
      * Get all of the events on the schedule that are due.
      *
      * @param Application $app
-     * @return Event[]
+     * @return AbstractEvent[]
      */
     public function dueEvents(Application $app)
     {
-        return array_filter($this->events, static function (Event $event) use ($app) {
+        return array_filter($this->events, static function (AbstractEvent $event) use ($app) {
             return $event->isDue($app);
         });
     }

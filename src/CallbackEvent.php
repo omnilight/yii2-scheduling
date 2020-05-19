@@ -10,7 +10,7 @@ use yii\mutex\Mutex;
 /**
  * Class CallbackEvent
  */
-class CallbackEvent extends Event
+class CallbackEvent extends AbstractEvent
 {
     /**
      * The callback to call.
@@ -52,9 +52,7 @@ class CallbackEvent extends Event
     }
 
     /**
-     * Run the given event.
-     *
-     * @param Application $app
+     * @inheritDoc
      * @return mixed
      */
     public function run(Application $app)
@@ -84,9 +82,7 @@ class CallbackEvent extends Event
     }
 
     /**
-     * Get the mutex name for the scheduled command.
-     *
-     * @return string
+     * @inheritDoc
      */
     protected function mutexName()
     {
@@ -94,9 +90,7 @@ class CallbackEvent extends Event
     }
 
     /**
-     * Get the summary of the event for display.
-     *
-     * @return string
+     * @inheritDoc
      */
     public function getSummaryForDisplay()
     {
@@ -105,5 +99,4 @@ class CallbackEvent extends Event
         }
         return is_string($this->callback) ? $this->callback : 'Closure';
     }
-
 }
