@@ -34,7 +34,7 @@ class Event extends Component
      *
      * @var string
      */
-    protected $expression = '* * * * * *';
+    protected $expression = '* * * * *';
     /**
      * The timezone the date should be evaluated on.
      *
@@ -233,7 +233,19 @@ class Event extends Component
      */
     public function hourly()
     {
-        return $this->cron('0 * * * * *');
+        return $this->spliceIntoPosition(1, 0);
+    }
+
+    /**
+     * Schedule the event to run hourly at a given offset in the hour.
+     *
+     * @param array|int|string $offset
+     * @return $this
+     */
+    public function hourlyAt($offset)
+    {
+        $offset = is_array($offset) ? implode(',', $offset) : $offset;
+        return $this->spliceIntoPosition(1, $offset);
     }
 
     /**
@@ -255,7 +267,8 @@ class Event extends Component
      */
     public function daily()
     {
-        return $this->cron('0 0 * * * *');
+        return $this->spliceIntoPosition(1, 0)
+            ->spliceIntoPosition(2, 0);
     }
 
     /**
@@ -299,11 +312,15 @@ class Event extends Component
     /**
      * Schedule the event to run twice daily.
      *
+     * @param int $first
+     * @param int $second
      * @return $this
      */
-    public function twiceDaily()
+    public function twiceDaily($first = 1, $second = 13)
     {
-        return $this->cron('0 1,13 * * * *');
+        $hours = $first . ',' . $second;
+        return $this->spliceIntoPosition(1, 0)
+            ->spliceIntoPosition(2, $hours);
     }
 
     /**
@@ -405,7 +422,9 @@ class Event extends Component
      */
     public function weekly()
     {
-        return $this->cron('0 0 * * 0 *');
+        return $this->spliceIntoPosition(1, 0)
+            ->spliceIntoPosition(2, 0)
+            ->spliceIntoPosition(5, 0);
     }
 
     /**
@@ -428,7 +447,51 @@ class Event extends Component
      */
     public function monthly()
     {
-        return $this->cron('0 0 1 * * *');
+        return $this->spliceIntoPosition(1, 0)
+            ->spliceIntoPosition(2, 0)
+            ->spliceIntoPosition(3, 1);
+    }
+
+    /**
+     * Schedule the event to run monthly on a given day and time.
+     *
+     * @param int $day
+     * @param string $time
+     * @return $this
+     */
+    public function monthlyOn($day = 1, $time = '0:0')
+    {
+        $this->dailyAt($time);
+        return $this->spliceIntoPosition(3, $day);
+    }
+
+    /**
+     * Schedule the event to run twice monthly.
+     *
+     * @param int $first
+     * @param int $second
+     * @return $this
+     */
+    public function twiceMonthly($first = 1, $second = 16)
+    {
+        $days = $first . ',' . $second;
+
+        return $this->spliceIntoPosition(1, 0)
+            ->spliceIntoPosition(2, 0)
+            ->spliceIntoPosition(3, $days);
+    }
+
+    /**
+     * Schedule the event to run quarterly.
+     *
+     * @return $this
+     */
+    public function quarterly()
+    {
+        return $this->spliceIntoPosition(1, 0)
+            ->spliceIntoPosition(2, 0)
+            ->spliceIntoPosition(3, 1)
+            ->spliceIntoPosition(4, '1-12/3');
     }
 
     /**
@@ -438,7 +501,10 @@ class Event extends Component
      */
     public function yearly()
     {
-        return $this->cron('0 0 1 1 * *');
+        return $this->spliceIntoPosition(1, 0)
+            ->spliceIntoPosition(2, 0)
+            ->spliceIntoPosition(3, 1)
+            ->spliceIntoPosition(4, 1);
     }
 
     /**
@@ -448,7 +514,7 @@ class Event extends Component
      */
     public function everyMinute()
     {
-        return $this->cron('* * * * * *');
+        return $this->spliceIntoPosition(1, '*');
     }
 
     /**
@@ -459,7 +525,7 @@ class Event extends Component
      */
     public function everyNMinutes($minutes)
     {
-        return $this->cron('*/' . $minutes . ' * * * * *');
+        return $this->spliceIntoPosition(1, '*/' . $minutes);
     }
 
     /**
@@ -489,7 +555,7 @@ class Event extends Component
      */
     public function everyThirtyMinutes()
     {
-        return $this->cron('0,30 * * * * *');
+        return $this->spliceIntoPosition(1, '0,30');
     }
 
     /**
