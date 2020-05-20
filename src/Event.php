@@ -26,17 +26,23 @@ class Event extends AbstractEvent
      */
     protected $user;
     /**
+     * Current working directory.
+     *
+     * @var
+     */
+    protected $cwd;
+    /**
      * The location that output should be sent to.
      *
-     * @var string
+     * @var string|null
      */
     protected $output;
     /**
-     * The string for redirection.
+     * Indicates whether output should be appended.
      *
-     * @var array
+     * @var bool
      */
-    protected $redirect = ' > ';
+    protected $shouldAppendOutput = false;
 
     /**
      * Create a new event instance.
@@ -47,7 +53,6 @@ class Event extends AbstractEvent
     public function __construct($command, $config = [])
     {
         $this->command = $command;
-        $this->output = $this->getDefaultOutput();
         parent::__construct($config);
     }
 
@@ -79,8 +84,8 @@ class Event extends AbstractEvent
      */
     protected function runCommandInForeground()
     {
-        $process = new Process($this->buildCommand(), dirname(Yii::$app->request->getScriptFile()));
-        $process->setTimeout(null);
+        $process = new Process($this->buildCommand(), $this->cwd);
+        $process->setTimeout(0);
 
         $process->run();
         $this->callAfterCallbacks();
@@ -93,8 +98,44 @@ class Event extends AbstractEvent
      */
     public function buildCommand()
     {
-        $command = $this->command . $this->redirect . $this->output . (($this->omitErrors) ? ' 2>&1 &' : '');
-        return $this->user ? 'sudo -u ' . $this->user . ' ' . $command : $command;
+        $command = trim($this->command, '& ')
+            . ($this->shouldAppendOutput ? ' >> ' : ' > ') . ($this->output ?: $this->getDefaultOutput());
+        if ($this->omitErrors) {
+            $command .= ' 2>&1';
+        }
+        return $this->ensureCorrectUser($this->ensureCorrectDirectory($command));
+    }
+
+    /**
+     * Finalize the command syntax with the correct directory.
+     *
+     * @param string $command
+     * @return string
+     */
+    protected function ensureCorrectDirectory($command)
+    {
+        if (!$this->cwd) {
+            return $command;
+        }
+        // Support changing drives in Windows
+        $cdParameter = $this->isWindows() ? '/d ' : '';
+        $andSign = $this->isWindows() ? ' &' : ';';
+
+        return "cd {$cdParameter}{$this->cwd}{$andSign} {$command}";
+    }
+
+    /**
+     * Finalize the command syntax with the correct user.
+     *
+     * @param string $command
+     * @return string
+     */
+    protected function ensureCorrectUser($command)
+    {
+        if (!$this->user || $this->isWindows()) {
+            return $command;
+        }
+        return sprintf("sudo -u %s -- sh -c '%s'", $this->user, $command);
     }
 
     /**
@@ -102,7 +143,8 @@ class Event extends AbstractEvent
      */
     protected function runCommandInBackground()
     {
-        chdir(dirname(Yii::$app->request->getScriptFile()));
+        $this->cwd && chdir($this->cwd);
+        //FIXME https://www.php.net/manual/en/function.exec#refsect1-function.exec-notes
         exec($this->buildCommand());
     }
 
@@ -129,6 +171,18 @@ class Event extends AbstractEvent
     }
 
     /**
+     * Change the current working directory.
+     *
+     * @param $directory
+     * @return $this
+     */
+    public function in($directory)
+    {
+        $this->cwd  = $directory;
+        return $this;
+    }
+
+    /**
      * Send the output of the command to a given location.
      *
      * @param string $location
@@ -136,7 +190,7 @@ class Event extends AbstractEvent
      */
     public function sendOutputTo($location)
     {
-        $this->redirect = ' > ';
+        $this->shouldAppendOutput = false;
         $this->output = $location;
         return $this;
     }
@@ -149,7 +203,7 @@ class Event extends AbstractEvent
      */
     public function appendOutputTo($location)
     {
-        $this->redirect = ' >> ';
+        $this->shouldAppendOutput = true;
         $this->output = $location;
         return $this;
     }
@@ -223,9 +277,14 @@ class Event extends AbstractEvent
      */
     public function getDefaultOutput()
     {
-        if (stripos(PHP_OS, 'WIN') === 0) {
-            return 'NUL';
-        }
-        return '/dev/null';
+        return $this->isWindows() ? 'NUL' : '/dev/null';
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isWindows()
+    {
+        return 0 === stripos(PHP_OS, 'WIN');
     }
 }
