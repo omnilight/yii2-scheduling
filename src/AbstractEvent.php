@@ -2,7 +2,6 @@
 
 namespace lexeo\yii2scheduling;
 
-use Closure;
 use Cron\CronExpression;
 use DateTime;
 use DateTimeZone;
@@ -31,19 +30,19 @@ abstract class AbstractEvent extends \yii\base\Component
     /**
      * The filter callback.
      *
-     * @var Closure
+     * @var callable[]
      */
-    protected $filter;
+    protected $filters = [];
     /**
      * The reject callback.
      *
-     * @var Closure
+     * @var callable[]
      */
-    protected $reject;
+    protected $rejects = [];
     /**
      * The array of callbacks to be run after the event is finished.
      *
-     * @var array
+     * @var callable[]
      */
     protected $afterCallbacks = [];
     /**
@@ -87,22 +86,40 @@ abstract class AbstractEvent extends \yii\base\Component
     /**
      * Register a callback to further filter the schedule.
      *
-     * @param Closure $callback
+     * @param callable|bool $callback
      * @return $this
      */
-    public function when(Closure $callback)
+    public function when($callback)
     {
-        $this->filter = $callback;
+        $this->filters[] = is_callable($callback) ? $callback : static function () use ($callback) {
+            return $callback;
+        };
+
+        return $this;
+    }
+
+    /**
+     * Register a callback to further filter the schedule.
+     *
+     * @param callable|bool $callback
+     * @return $this
+     */
+    public function skip($callback)
+    {
+        $this->rejects[] = is_callable($callback) ? $callback : static function () use ($callback) {
+            return $callback;
+        };
+
         return $this;
     }
 
     /**
      * Register a callback to be called after the operation.
      *
-     * @param Closure $callback
+     * @param callable $callback
      * @return $this
      */
-    public function then(Closure $callback)
+    public function then($callback)
     {
         $this->afterCallbacks[] = $callback;
         return $this;
@@ -122,24 +139,12 @@ abstract class AbstractEvent extends \yii\base\Component
     }
 
     /**
-     * Register a callback to further filter the schedule.
-     *
-     * @param Closure $callback
-     * @return $this
-     */
-    public function skip(Closure $callback)
-    {
-        $this->reject = $callback;
-        return $this;
-    }
-
-    /**
      * Call all of the "after" callbacks for the event.
      */
     protected function callAfterCallbacks()
     {
         foreach ($this->afterCallbacks as $callback) {
-            call_user_func($callback);
+            call_user_func($callback, $this);
         }
     }
 
@@ -217,10 +222,16 @@ abstract class AbstractEvent extends \yii\base\Component
      */
     protected function filtersPass()
     {
-        if (($this->filter && !call_user_func($this->filter))
-            || ($this->reject && call_user_func($this->reject))
-        ) {
-            return false;
+        foreach ($this->filters as $callback) {
+            if (!call_user_func($callback, $this)) {
+                return false;
+            }
+        }
+
+        foreach ($this->rejects as $callback) {
+            if (call_user_func($callback, $this)) {
+                return false;
+            }
         }
         return true;
     }
