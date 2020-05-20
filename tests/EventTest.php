@@ -4,24 +4,9 @@ namespace lexeo\yii2scheduling\tests;
 
 use DateTimeZone;
 use lexeo\yii2scheduling\Event;
-use yii\mutex\Mutex;
 
 class EventTest extends AbstractTestCase
 {
-    /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|Mutex
-     */
-    protected $mutexMock;
-
-    /**
-     * @inheritDoc
-     */
-    protected function setUp()
-    {
-        parent::setUp();
-        $this->mutexMock = $this->getMock(Mutex::className());
-    }
-
     /**
      * @return array[]
      */
@@ -44,7 +29,7 @@ class EventTest extends AbstractTestCase
      */
     public function testBuildCommandSendOutputTo($omitErrors, $command, $outputTo, $result)
     {
-        $event = new Event($this->mutexMock, $command);
+        $event = new Event($command);
         $event->omitErrors($omitErrors);
         $event->sendOutputTo($outputTo);
         $this->assertSame($result, $event->buildCommand());
@@ -52,7 +37,7 @@ class EventTest extends AbstractTestCase
 
     public function testTimezoneAcceptsBothStringAndDateTimeZone()
     {
-        $event = new Event($this->mutexMock, '');
+        $event = new Event('');
         $propReflection = (new \ReflectionObject($event))->getProperty('timezone');
         $propReflection->setAccessible(true);
 

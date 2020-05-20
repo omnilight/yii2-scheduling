@@ -56,7 +56,7 @@ abstract class AbstractEvent extends \yii\base\Component
     /**
      * The mutex implementation.
      *
-     * @var Mutex
+     * @var Mutex|null
      */
     protected $mutex;
     /**
@@ -566,12 +566,30 @@ abstract class AbstractEvent extends \yii\base\Component
     }
 
     /**
+     * @param Mutex|null $mutex
+     * @return $this
+     */
+    public function setMutex($mutex)
+    {
+        if (null !== $mutex && !$mutex instanceof Mutex) {
+            throw new \InvalidArgumentException(sprintf(
+                'Instance of "%s" expected, "%s" provided.',
+                Mutex::className(),
+                is_object($mutex) ? get_class($mutex) : gettype($mutex)
+            ));
+        }
+        $this->mutex = $mutex;
+        return $this;
+    }
+
+    /**
      * Do not allow the event to overlap each other.
      *
      * @return $this
      */
     public function withoutOverlapping()
     {
+        $this->ensureMutexDefined();
         return $this->then(function () {
             $this->mutex->release($this->mutexName());
         })->skip(function () {
@@ -586,6 +604,7 @@ abstract class AbstractEvent extends \yii\base\Component
      */
     public function onOneServer()
     {
+        $this->ensureMutexDefined();
         if ($this->mutex instanceof FileMutex) {
             throw new InvalidConfigException(
                 'You must config mutex in the application component, except the FileMutex.'
@@ -593,5 +612,15 @@ abstract class AbstractEvent extends \yii\base\Component
         }
 
         return $this->withoutOverlapping();
+    }
+
+    /**
+     * @throws InvalidConfigException
+     */
+    private function ensureMutexDefined()
+    {
+        if (null === $this->mutex) {
+            throw new InvalidConfigException('For preventing overlapping a Mutex component is required.');
+        }
     }
 }

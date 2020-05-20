@@ -24,7 +24,7 @@ class Schedule extends Component
     /**
      * The mutex implementation.
      *
-     * @var Mutex
+     * @var Mutex|null
      */
     protected $mutex;
 
@@ -53,7 +53,10 @@ class Schedule extends Component
      */
     public function call($callback, array $parameters = [])
     {
-        $this->events[] = $event = new CallbackEvent($this->mutex, $callback, $parameters);
+        $event = new CallbackEvent($callback, $parameters);
+        $event->setMutex($this->mutex);
+
+        $this->events[] = $event;
         return $event;
     }
 
@@ -76,7 +79,10 @@ class Schedule extends Component
      */
     public function exec($command)
     {
-        $this->events[] = $event = new Event($this->mutex, $command);
+        $event = new Event($command);
+        $event->setMutex($this->mutex);
+
+        $this->events[] = $event;
         return $event;
     }
 

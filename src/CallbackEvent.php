@@ -2,10 +2,9 @@
 
 namespace lexeo\yii2scheduling;
 
-use Yii;
+use InvalidArgumentException;
 use yii\base\Application;
-use yii\base\InvalidParamException;
-use yii\mutex\Mutex;
+use yii\base\InvalidConfigException;
 
 /**
  * Class CallbackEvent
@@ -15,7 +14,7 @@ class CallbackEvent extends AbstractEvent
     /**
      * The callback to call.
      *
-     * @var string
+     * @var callable
      */
     protected $callback;
     /**
@@ -28,27 +27,19 @@ class CallbackEvent extends AbstractEvent
     /**
      * Create a new event instance.
      *
-     * @param Mutex $mutex
-     * @param string $callback
+     * @param callable $callback
      * @param array $parameters
      * @param array $config
-     * @throws InvalidParamException
+     * @throws InvalidArgumentException
      */
-    public function __construct(Mutex $mutex, $callback, array $parameters = [], $config = [])
+    public function __construct($callback, array $parameters = [], $config = [])
     {
+        if (!is_callable($callback)) {
+            throw new InvalidArgumentException('Invalid scheduled callback event. Must be callable.');
+        }
         $this->callback = $callback;
         $this->parameters = $parameters;
-        $this->mutex = $mutex;
-
-        if (!empty($config)) {
-            Yii::configure($this, $config);
-        }
-
-        if (!is_string($this->callback) && !is_callable($this->callback)) {
-            throw new InvalidParamException(
-                "Invalid scheduled callback event. Must be string or callable."
-            );
-        }
+        parent::__construct($config);
     }
 
     /**
@@ -65,27 +56,16 @@ class CallbackEvent extends AbstractEvent
     }
 
     /**
-     * Do not allow the event to overlap each other.
-     *
-     * @return $this
-     * @throws InvalidParamException
-     */
-    public function withoutOverlapping()
-    {
-        if (empty($this->description)) {
-            throw new InvalidParamException(
-                "A scheduled event name is required to prevent overlapping. Use the 'description' method before 'withoutOverlapping'."
-            );
-        }
-
-        return parent::withoutOverlapping();
-    }
-
-    /**
      * @inheritDoc
+     * @throws InvalidConfigException
      */
     protected function mutexName()
     {
+        if (!$this->description) {
+            throw new InvalidConfigException(
+                "A scheduled event name is required to prevent overlapping. Use the 'description' method before 'withoutOverlapping'."
+            );
+        }
         return 'framework/schedule-' . sha1($this->description);
     }
 

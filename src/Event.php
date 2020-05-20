@@ -6,7 +6,6 @@ use Symfony\Component\Process\Process;
 use yii\base\Application;
 use yii\base\InvalidCallException;
 use yii\mail\MailerInterface;
-use yii\mutex\Mutex;
 
 /**
  * Class Event
@@ -43,14 +42,12 @@ class Event extends AbstractEvent
     /**
      * Create a new event instance.
      *
-     * @param Mutex $mutex
      * @param string $command
      * @param array $config
      */
-    public function __construct(Mutex $mutex, $command, $config = [])
+    public function __construct($command, $config = [])
     {
         $this->command = $command;
-        $this->mutex = $mutex;
         $this->output = $this->getDefaultOutput();
         parent::__construct($config);
     }
