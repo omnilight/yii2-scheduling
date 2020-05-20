@@ -3,7 +3,6 @@
 namespace lexeo\yii2scheduling;
 
 use InvalidArgumentException;
-use yii\base\Application;
 use yii\base\InvalidConfigException;
 
 /**
@@ -46,11 +45,11 @@ class CallbackEvent extends AbstractEvent
      * @inheritDoc
      * @return mixed
      */
-    public function run(Application $app)
+    public function run()
     {
         $this->trigger(self::EVENT_BEFORE_RUN);
-        $response = call_user_func_array($this->callback, array_merge($this->parameters, [$app]));
-        $this->callAfterCallbacks($app);
+        $response = call_user_func_array($this->callback, $this->parameters);
+        $this->callAfterCallbacks();
         $this->trigger(self::EVENT_AFTER_RUN);
         return $response;
     }

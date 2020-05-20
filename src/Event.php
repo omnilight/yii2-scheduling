@@ -3,9 +3,9 @@
 namespace lexeo\yii2scheduling;
 
 use Symfony\Component\Process\Process;
-use yii\base\Application;
 use yii\base\InvalidCallException;
 use yii\mail\MailerInterface;
+use Yii;
 
 /**
  * Class Event
@@ -19,7 +19,6 @@ class Event extends AbstractEvent
      * @var string
      */
     protected $command;
-
     /**
      * The user the command should run as.
      *
@@ -55,13 +54,13 @@ class Event extends AbstractEvent
     /**
      * @inheritDoc
      */
-    public function run(Application $app)
+    public function run()
     {
         $this->trigger(self::EVENT_BEFORE_RUN);
         if (count($this->afterCallbacks) > 0) {
-            $this->runCommandInForeground($app);
+            $this->runCommandInForeground();
         } else {
-            $this->runCommandInBackground($app);
+            $this->runCommandInBackground();
         }
         $this->trigger(self::EVENT_AFTER_RUN);
     }
@@ -77,18 +76,14 @@ class Event extends AbstractEvent
     /**
      * Run the command in the foreground.
      *
-     * @param Application $app
      */
-    protected function runCommandInForeground(Application $app)
+    protected function runCommandInForeground()
     {
-        (new Process(
-            trim($this->buildCommand(), '& '),
-            dirname($app->request->getScriptFile()),
-            null,
-            null,
-            null
-        ))->run();
-        $this->callAfterCallbacks($app);
+        $process = new Process($this->buildCommand(), dirname(Yii::$app->request->getScriptFile()));
+        $process->setTimeout(null);
+
+        $process->run();
+        $this->callAfterCallbacks();
     }
 
     /**
@@ -104,12 +99,10 @@ class Event extends AbstractEvent
 
     /**
      * Run the command in the background using exec.
-     *
-     * @param Application $app
      */
-    protected function runCommandInBackground(Application $app)
+    protected function runCommandInBackground()
     {
-        chdir(dirname($app->request->getScriptFile()));
+        chdir(dirname(Yii::$app->request->getScriptFile()));
         exec($this->buildCommand());
     }
 
@@ -175,8 +168,8 @@ class Event extends AbstractEvent
             throw new InvalidCallException("Must direct output to a file in order to e-mail results.");
         }
         $addresses = is_array($addresses) ? $addresses : func_get_args();
-        return $this->then(function (Application $app) use ($addresses) {
-            $this->emailOutput($app->mailer, $addresses);
+        return $this->then(function () use ($addresses) {
+            $this->emailOutput(Yii::$app->mailer, $addresses);
         });
     }
 

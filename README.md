@@ -199,7 +199,7 @@ $schedule->exec('ls')->everyFiveMinutes();
 $schedule->command('migrate')->hourly();
 
 // This command will call callback function every day at 10:00
-$schedule->call(function(\yii\console\Application $app) {
+$schedule->call(function() {
     // Some code here...
 })->dailyAt('10:00');
 

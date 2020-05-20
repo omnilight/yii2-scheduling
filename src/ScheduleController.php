@@ -51,14 +51,14 @@ class ScheduleController extends Controller
     {
         $this->importScheduleFile();
 
-        $events = $this->schedule->dueEvents(Yii::$app);
+        $events = $this->schedule->dueEvents();
 
         foreach ($events as $event) {
             if ($this->omitErrors !== null) {
                 $event->omitErrors($this->omitErrors);
             }
             $this->stdout('Running scheduled command: ' . $event->getSummaryForDisplay() . "\n");
-            $event->run(Yii::$app);
+            $event->run();
         }
 
         if (count($events) === 0) {

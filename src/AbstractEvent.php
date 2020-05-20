@@ -7,7 +7,6 @@ use Cron\CronExpression;
 use DateTime;
 use DateTimeZone;
 use GuzzleHttp\Client as HttpClient;
-use yii\base\Application;
 use yii\base\InvalidConfigException;
 use yii\mutex\FileMutex;
 use yii\mutex\Mutex;
@@ -68,10 +67,8 @@ abstract class AbstractEvent extends \yii\base\Component
 
     /**
      * Run the given event.
-     *
-     * @param Application $app
      */
-    abstract public function run(Application $app);
+    abstract public function run();
 
     /**
      * Get the summary of the event for display.
@@ -138,13 +135,11 @@ abstract class AbstractEvent extends \yii\base\Component
 
     /**
      * Call all of the "after" callbacks for the event.
-     *
-     * @param Application $app
      */
-    protected function callAfterCallbacks(Application $app)
+    protected function callAfterCallbacks()
     {
         foreach ($this->afterCallbacks as $callback) {
-            call_user_func($callback, $app);
+            call_user_func($callback);
         }
     }
 
@@ -197,12 +192,11 @@ abstract class AbstractEvent extends \yii\base\Component
     /**
      * Determine if the given event should run based on the Cron expression.
      *
-     * @param Application $app
      * @return bool
      */
-    public function isDue(Application $app)
+    public function isDue()
     {
-        return $this->expressionPasses() && $this->filtersPass($app);
+        return $this->expressionPasses() && $this->filtersPass();
     }
 
     /**
@@ -219,13 +213,12 @@ abstract class AbstractEvent extends \yii\base\Component
     /**
      * Determine if the filters pass for the event.
      *
-     * @param Application $app
      * @return bool
      */
-    protected function filtersPass(Application $app)
+    protected function filtersPass()
     {
-        if (($this->filter && !call_user_func($this->filter, $app))
-            || ($this->reject && call_user_func($this->reject, $app))
+        if (($this->filter && !call_user_func($this->filter))
+            || ($this->reject && call_user_func($this->reject))
         ) {
             return false;
         }

@@ -4,7 +4,6 @@ namespace lexeo\yii2scheduling;
 
 use Yii;
 use yii\base\Component;
-use yii\base\Application;
 use yii\mutex\FileMutex;
 use yii\mutex\Mutex;
 
@@ -97,13 +96,12 @@ class Schedule extends Component
     /**
      * Get all of the events on the schedule that are due.
      *
-     * @param Application $app
      * @return AbstractEvent[]
      */
-    public function dueEvents(Application $app)
+    public function dueEvents()
     {
-        return array_filter($this->events, static function (AbstractEvent $event) use ($app) {
-            return $event->isDue($app);
+        return array_filter($this->events, static function (AbstractEvent $event) {
+            return $event->isDue();
         });
     }
 }
