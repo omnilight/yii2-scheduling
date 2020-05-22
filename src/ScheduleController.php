@@ -3,6 +3,7 @@
 namespace lexeo\yii2scheduling;
 
 use Yii;
+use yii\base\InvalidParamException;
 use yii\console\Controller;
 use yii\di\Instance;
 
@@ -20,22 +21,27 @@ class ScheduleController extends Controller
      * @var string Schedule file that will be used to run schedule
      */
     public $scheduleFile;
-
     /**
      * @var bool|null set to true to avoid error output.
      * Note: if not null, the specified value will be applied globally for all commands
      */
     public $omitErrors;
 
+    /**
+     * @inheritDoc
+     */
     public function options($actionID)
     {
         return array_merge(
             parent::options($actionID),
-            $actionID === 'run' ? ['scheduleFile', 'omitErrors'] : []
+            'run' === $actionID ? ['scheduleFile', 'omitErrors'] : []
         );
     }
 
-
+    /**
+     * @inheritDoc
+     * @throws \yii\base\InvalidConfigException
+     */
     public function init()
     {
         if (Yii::$app->has($this->schedule)) {
@@ -47,42 +53,53 @@ class ScheduleController extends Controller
     }
 
 
+    /**
+     * @return void
+     * @throws InvalidParamException
+     */
     public function actionRun()
     {
         $this->importScheduleFile();
 
-        $jobs = $this->schedule->dueJobs();
-
-        foreach ($jobs as $job) {
+        $jobsRan = false;
+        foreach ($this->schedule->dueJobs() as $job) {
             if (!$job->filtersPass()) {
                 continue;
             }
-
             if ($this->omitErrors !== null) {
                 $job->omitErrors($this->omitErrors);
             }
             $this->stdout('Running scheduled command: ' . $job->getSummaryForDisplay() . "\n");
             $job->run();
+            $jobsRan = true;
         }
 
-        if (count($jobs) === 0) {
+        if (false === $jobsRan) {
             $this->stdout("No scheduled commands are ready to run.\n");
         }
     }
 
+    /**
+     * @param string $id The unique Job id (mutexName)
+     * @param int $exitCode
+     * @return void
+     * @throws InvalidParamException
+     */
     public function actionFinish($id, $exitCode = 0)
     {
         $this->importScheduleFile();
-
         foreach ($this->schedule->getJobs() as $job) {
-            /** @var ShellJob $job */
-            if ($id === $job->mutexName()) {
+            if ($job instanceof ShellJob && $id === $job->mutexName()) {
                 $job->finish($exitCode);
                 break;
             }
         }
     }
 
+    /**
+     * @return void
+     * @throws InvalidParamException
+     */
     protected function importScheduleFile()
     {
         if ($this->scheduleFile === null) {
