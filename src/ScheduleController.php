@@ -77,7 +77,8 @@ class ScheduleController extends Controller
         foreach ($this->schedule->getEvents() as $event) {
             /** @var Event $event */
             if ($id === $event->mutexName()) {
-                $event->callAfterCallbacksWithExitCode($exitCode);
+                $event->finish($exitCode);
+                break;
             }
         }
     }

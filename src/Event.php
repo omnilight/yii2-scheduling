@@ -74,15 +74,14 @@ class Event extends AbstractEvent
      */
     public function run()
     {
-        $this->trigger(self::EVENT_BEFORE_RUN);
+        if (!$this->beforeRun()) {
+            return;
+        }
 
         $this->runInBackground
             ? $this->runCommandInBackground()
             : $this->runCommandInForeground();
-
-        $this->trigger(self::EVENT_AFTER_RUN);
     }
-
 
     /**
      * Call all of the "after" callbacks for the event.
@@ -90,10 +89,10 @@ class Event extends AbstractEvent
      * @param int $exitCode
      * @return void
      */
-    public function callAfterCallbacksWithExitCode($exitCode)
+    public function finish($exitCode)
     {
         $this->exitCode = (int) $exitCode;
-        $this->callAfterCallbacks();
+        $this->afterComplete();
     }
 
     /**
@@ -110,7 +109,7 @@ class Event extends AbstractEvent
     protected function runCommandInForeground()
     {
         $this->exitCode = $this->createProcess($this->buildCommand(), $this->cwd)->run();
-        $this->callAfterCallbacks();
+        $this->afterComplete();
     }
 
 

@@ -22,6 +22,12 @@ class CallbackEvent extends AbstractEvent
      * @var array
      */
     protected $parameters;
+    /**
+     * The result of running given callback
+     *
+     * @var mixed
+     */
+    public $result;
 
     /**
      * Create a new event instance.
@@ -43,15 +49,14 @@ class CallbackEvent extends AbstractEvent
 
     /**
      * @inheritDoc
-     * @return mixed
      */
     public function run()
     {
-        $this->trigger(self::EVENT_BEFORE_RUN);
-        $response = call_user_func_array($this->callback, $this->parameters);
-        $this->callAfterCallbacks();
-        $this->trigger(self::EVENT_AFTER_RUN);
-        return $response;
+        if (!$this->beforeRun()) {
+            return;
+        }
+        $this->result = call_user_func_array($this->callback, $this->parameters);
+        $this->afterComplete();
     }
 
     /**

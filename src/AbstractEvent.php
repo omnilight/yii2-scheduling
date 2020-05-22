@@ -7,13 +7,14 @@ use DateTime;
 use DateTimeZone;
 use GuzzleHttp\Client as HttpClient;
 use yii\base\InvalidConfigException;
+use yii\base\ModelEvent;
 use yii\mutex\FileMutex;
 use yii\mutex\Mutex;
 
 abstract class AbstractEvent extends \yii\base\Component
 {
     const EVENT_BEFORE_RUN = 'beforeRun';
-    const EVENT_AFTER_RUN = 'afterRun';
+    const EVENT_AFTER_COMPLETE = 'afterComplete';
 
     /**
      * The cron expression representing the event's frequency.
@@ -40,12 +41,6 @@ abstract class AbstractEvent extends \yii\base\Component
      */
     protected $rejects = [];
     /**
-     * The array of callbacks to be run after the event is finished.
-     *
-     * @var callable[]
-     */
-    protected $afterCallbacks = [];
-    /**
      * The human readable description of the event.
      *
      * @var string
@@ -57,6 +52,12 @@ abstract class AbstractEvent extends \yii\base\Component
      * @var Mutex|null
      */
     protected $mutex;
+    /**
+     * Indicates if the command should not overlap itself.
+     *
+     * @var bool
+     */
+    protected $withoutOverlapping = false;
     /**
      * Decide if errors will be displayed.
      *
@@ -82,6 +83,25 @@ abstract class AbstractEvent extends \yii\base\Component
      * @return string
      */
     abstract public function mutexName();
+
+    /**
+     * @return bool
+     */
+    protected function beforeRun()
+    {
+        $event = new ModelEvent();
+        $this->trigger(self::EVENT_BEFORE_RUN, $event);
+
+        return $event->isValid;
+    }
+
+    /**
+     * @return void
+     */
+    protected function afterComplete()
+    {
+        $this->trigger(self::EVENT_AFTER_COMPLETE);
+    }
 
     /**
      * Register a callback to further filter the schedule.
@@ -117,11 +137,12 @@ abstract class AbstractEvent extends \yii\base\Component
      * Register a callback to be called after the operation.
      *
      * @param callable $callback
+     * @param mixed $data
      * @return $this
      */
-    public function then($callback)
+    public function then($callback, $data = null)
     {
-        $this->afterCallbacks[] = $callback;
+        $this->on(self::EVENT_AFTER_COMPLETE, $callback, $data);
         return $this;
     }
 
@@ -136,16 +157,6 @@ abstract class AbstractEvent extends \yii\base\Component
         return $this->then(static function () use ($url) {
             (new HttpClient)->get($url);
         });
-    }
-
-    /**
-     * Call all of the "after" callbacks for the event.
-     */
-    protected function callAfterCallbacks()
-    {
-        foreach ($this->afterCallbacks as $callback) {
-            call_user_func($callback, $this);
-        }
     }
 
     /**
@@ -592,12 +603,22 @@ abstract class AbstractEvent extends \yii\base\Component
      */
     public function withoutOverlapping()
     {
-        $this->ensureMutexDefined();
-        return $this->then(function () {
-            $this->mutex->release($this->mutexName());
-        })->skip(function () {
-            return !$this->mutex->acquire($this->mutexName());
-        });
+        if (!$this->withoutOverlapping) {
+            $this->ensureMutexDefined();
+
+            $this->on(self::EVENT_BEFORE_RUN, function (ModelEvent $e) {
+                if (!$this->mutex->acquire($this->mutexName())) {
+                    $e->isValid = false;
+                }
+            });
+
+            $this->then(function () {
+                $this->mutex->release($this->mutexName());
+            });
+            //TODO skip if lock exists. Unfortunately Mutex class doesn't allow to check if lock exists
+        }
+        $this->withoutOverlapping = true;
+        return $this;
     }
 
     /**
