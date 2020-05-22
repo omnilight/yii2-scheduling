@@ -66,6 +66,18 @@ class ScheduleController extends Controller
         }
     }
 
+    public function actionFinish($id, $exitCode = 0)
+    {
+        $this->importScheduleFile();
+
+        foreach ($this->schedule->getEvents() as $event) {
+            /** @var Event $event */
+            if ($id === $event->mutexName()) {
+                $event->callAfterCallbacksWithExitCode($exitCode);
+            }
+        }
+    }
+
     protected function importScheduleFile()
     {
         if ($this->scheduleFile === null) {

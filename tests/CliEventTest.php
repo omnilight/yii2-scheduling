@@ -3,6 +3,9 @@
 namespace lexeo\yii2scheduling\tests;
 
 use lexeo\yii2scheduling\Event;
+use Yii;
+use yii\console\Controller;
+use yii\console\Request;
 
 class CliEventTest extends AbstractTestCase
 {
@@ -12,8 +15,7 @@ class CliEventTest extends AbstractTestCase
         $cmd = 'php -i';
         $defOutput = '/dev/null';
 
-        /** @var \PHPUnit_Framework_MockObject_MockObject|Event $eventMock */
-        $eventMock = $this->getMock(Event::className(), ['getDefaultOutput'], [$cmd]);
+        $eventMock = $this->createEventMock($cmd, ['getDefaultOutput']);
         $eventMock->expects($this->any())
             ->method('getDefaultOutput')
             ->willReturn($defOutput);
@@ -32,8 +34,7 @@ class CliEventTest extends AbstractTestCase
      */
     public function testBuildsCommandChangingUser()
     {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|Event $eventMock */
-        $eventMock = $this->getMock(Event::className(), ['isWindows'], ['php -i']);
+        $eventMock = $this->createEventMock('php -i', ['isWindows']);
         $eventMock->expects($this->any())
             ->method('isWindows')
             ->willReturn(false);
@@ -50,8 +51,7 @@ class CliEventTest extends AbstractTestCase
 
     public function testBuildsCommandChangingDir()
     {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|Event $eventMock */
-        $eventMock = $this->getMock(Event::className(), ['isWindows'], ['php -i']);
+        $eventMock = $this->createEventMock('php -i', ['isWindows']);
         $eventMock->expects($this->any())
             ->method('isWindows')
             ->willReturn(false);
@@ -72,8 +72,7 @@ class CliEventTest extends AbstractTestCase
      */
     public function testBuildsCommandChangingUserAndDir()
     {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|Event $eventMock */
-        $eventMock = $this->getMock(Event::className(), ['isWindows'], ['php -i']);
+        $eventMock = $this->createEventMock('php -i', ['isWindows']);
         $eventMock->expects($this->any())
             ->method('isWindows')
             ->willReturn(false);
@@ -88,5 +87,58 @@ class CliEventTest extends AbstractTestCase
         $eventMock->user($userName);
         $eventMock->in($dir);
         $this->assertSame("sudo -u {$userName} -- sh -c 'cd {$dir}; {$cmd} > {$defOutput}'", $eventMock->buildCommand());
+    }
+
+    public function testBuildsBackgroundCommand()
+    {
+        $this->mockApplicationRequestScriptFileAndControllerId('yii', 'schedule');
+
+        $cmd = 'controller/action';
+        $mutexName = '12345';
+        $eventMock = $this->createEventMock($cmd, ['isWindows', 'mutexName']);
+        $eventMock->expects($this->any())
+            ->method('isWindows')
+            ->willReturn(false);
+        $eventMock->expects($this->any())
+            ->method('mutexName')
+            ->willReturn($mutexName);
+
+        $eventMock->runInBackground(true);
+        $callbackCmd = strtr('{php} {yii} {controller}/finish "{id}" "{exitCode}"', [
+            '{php}' => PHP_BINARY,
+            '{yii}' => Yii::$app->request->scriptFile,
+            '{controller}' => Yii::$app->controller->id,
+            '{id}' => $mutexName,
+            '{exitCode}' => '$?',
+        ]);
+        $this->assertSame(
+            "({$cmd} > {$eventMock->getDefaultOutput()} ; {$callbackCmd}) > /dev/null 2>&1 &",
+            $eventMock->buildCommand()
+        );
+    }
+
+    /**
+     * @param string $command
+     * @param array|null $methods
+     * @return \PHPUnit_Framework_MockObject_MockObject|Event
+     */
+    private function createEventMock($command, $methods = [])
+    {
+        return $this->getMock(Event::className(), $methods, [$command]);
+    }
+
+
+    protected function mockApplicationRequestScriptFileAndControllerId($scriptFile, $controllerId)
+    {
+        $this->mockApplication();
+
+        $requestMock = $this->getMock(Request::className(), ['getScriptFile']);
+        $requestMock->expects($this->any())
+            ->method('getScriptFile')
+            ->willReturn($scriptFile);
+
+
+        Yii::$app->set('request', $requestMock);
+        Yii::$app->controller = new Controller($controllerId, null);
     }
 }

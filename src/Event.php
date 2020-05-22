@@ -11,6 +11,7 @@ use Yii;
  * Class Event
  *
  * @property-read string $command
+ * @property-read int|null $exitCode
  */
 class Event extends AbstractEvent
 {
@@ -43,6 +44,18 @@ class Event extends AbstractEvent
      * @var bool
      */
     protected $shouldAppendOutput = false;
+    /**
+     * Indicates if the command should run in background.
+     *
+     * @var bool
+     */
+    public $runInBackground = false;
+    /**
+     * The exit status code of the command.
+     *
+     * @var int|null
+     */
+    protected $exitCode;
 
     /**
      * Create a new event instance.
@@ -62,33 +75,65 @@ class Event extends AbstractEvent
     public function run()
     {
         $this->trigger(self::EVENT_BEFORE_RUN);
-        if (count($this->afterCallbacks) > 0) {
-            $this->runCommandInForeground();
-        } else {
-            $this->runCommandInBackground();
-        }
+
+        $this->runInBackground
+            ? $this->runCommandInBackground()
+            : $this->runCommandInForeground();
+
         $this->trigger(self::EVENT_AFTER_RUN);
+    }
+
+
+    /**
+     * Call all of the "after" callbacks for the event.
+     *
+     * @param int $exitCode
+     * @return void
+     */
+    public function callAfterCallbacksWithExitCode($exitCode)
+    {
+        $this->exitCode = (int) $exitCode;
+        $this->callAfterCallbacks();
     }
 
     /**
      * @inheritDoc
      */
-    protected function mutexName()
+    public function mutexName()
     {
         return 'framework/schedule-' . sha1($this->expression . $this->command);
     }
 
     /**
      * Run the command in the foreground.
-     *
      */
     protected function runCommandInForeground()
     {
-        $process = new Process($this->buildCommand(), $this->cwd);
-        $process->setTimeout(0);
-
-        $process->run();
+        $this->exitCode = $this->createProcess($this->buildCommand())->run();
         $this->callAfterCallbacks();
+    }
+
+
+    /**
+     * Run the command in the background.
+     */
+    protected function runCommandInBackground()
+    {
+        $this->createProcess($this->buildCommand())->run();
+    }
+
+    /**
+     * @param string $command
+     * @param string|null $cwd
+     * @param int|float|null $timeout
+     * @return Process
+     */
+    protected function createProcess($command, $cwd = null, $timeout = null)
+    {
+        if (method_exists('Symfony\Component\Process\Process', 'fromShellCommandline')) {
+            return Process::fromShellCommandline($command, $cwd, null, null, $timeout);
+        }
+        return new Process($command, $cwd, null, null, $timeout);
     }
 
     /**
@@ -98,12 +143,38 @@ class Event extends AbstractEvent
      */
     public function buildCommand()
     {
-        $command = trim($this->command, '& ')
-            . ($this->shouldAppendOutput ? ' >> ' : ' > ') . ($this->output ?: $this->getDefaultOutput());
+        $command = trim($this->command, '& ');
+        $redirectOutput = ($this->shouldAppendOutput ? '>>' : '>') . ' ' . ($this->output ?: $this->getDefaultOutput());
         if ($this->omitErrors) {
-            $command .= ' 2>&1';
+            $redirectOutput .= ' 2>&1';
         }
-        return $this->ensureCorrectUser($this->ensureCorrectDirectory($command));
+        $command = $this->ensureCorrectDirectory($command);
+        if (!$this->runInBackground) {
+            return $this->ensureCorrectUser("{$command} {$redirectOutput}");
+        }
+
+        $callbackCmd = strtr('{php} {yii} {controller}/finish', [
+            '{php}' => PHP_BINARY,
+            '{yii}' => Yii::$app->request->scriptFile,
+            '{controller}' => Yii::$app->controller->id,
+        ]);
+        if ($this->isWindows()) {
+            $callback = strtr('{cmd} "{id}" "{exitCode}"', [
+                '{cmd}' => $callbackCmd,
+                '{id}' => $this->mutexName(),
+                '{exitCode}' => '%errorlevel%',
+            ]);
+            return "start /b cmd /c \"({$command} & {$callback}) {$redirectOutput}\"";
+        }
+
+        $callback = strtr('{cmd} "{id}" "{exitCode}"', [
+            '{cmd}' => $callbackCmd,
+            '{id}' => $this->mutexName(),
+            '{exitCode}' => '$?',
+        ]);
+        return $this->ensureCorrectUser(
+            "({$command} {$redirectOutput} ; {$callback}) > {$this->getDefaultOutput()} 2>&1 &"
+        );
     }
 
     /**
@@ -117,11 +188,10 @@ class Event extends AbstractEvent
         if (!$this->cwd) {
             return $command;
         }
-        // Support changing drives in Windows
-        $cdParameter = $this->isWindows() ? '/d ' : '';
-        $andSign = $this->isWindows() ? ' &' : ';';
-
-        return "cd {$cdParameter}{$this->cwd}{$andSign} {$command}";
+        return $this->isWindows()
+            // support changing drives in Windows
+            ? "cd /d {$this->cwd} & {$command}"
+            : "cd {$this->cwd}; {$command}";
     }
 
     /**
@@ -139,16 +209,6 @@ class Event extends AbstractEvent
     }
 
     /**
-     * Run the command in the background using exec.
-     */
-    protected function runCommandInBackground()
-    {
-        $this->cwd && chdir($this->cwd);
-        //FIXME https://www.php.net/manual/en/function.exec#refsect1-function.exec-notes
-        exec($this->buildCommand());
-    }
-
-    /**
      * Get the command string.
      *
      * @return string
@@ -156,6 +216,14 @@ class Event extends AbstractEvent
     public function getCommand()
     {
         return $this->command;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getExitCode()
+    {
+        return $this->exitCode;
     }
 
     /**
@@ -183,14 +251,27 @@ class Event extends AbstractEvent
     }
 
     /**
+     * State that the command should run in background or not.
+     *
+     * @param bool $inBackground
+     * @return $this
+     */
+    public function runInBackground($inBackground = true)
+    {
+        $this->runInBackground = $inBackground;
+        return $this;
+    }
+
+    /**
      * Send the output of the command to a given location.
      *
      * @param string $location
+     * @param bool $append
      * @return $this
      */
-    public function sendOutputTo($location)
+    public function sendOutputTo($location, $append = false)
     {
-        $this->shouldAppendOutput = false;
+        $this->shouldAppendOutput = $append;
         $this->output = $location;
         return $this;
     }

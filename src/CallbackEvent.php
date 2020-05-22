@@ -58,7 +58,7 @@ class CallbackEvent extends AbstractEvent
      * @inheritDoc
      * @throws InvalidConfigException
      */
-    protected function mutexName()
+    public function mutexName()
     {
         if (!$this->description) {
             throw new InvalidConfigException(

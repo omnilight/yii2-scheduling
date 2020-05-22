@@ -81,7 +81,7 @@ abstract class AbstractEvent extends \yii\base\Component
      *
      * @return string
      */
-    abstract protected function mutexName();
+    abstract public function mutexName();
 
     /**
      * Register a callback to further filter the schedule.
