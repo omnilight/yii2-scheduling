@@ -4,6 +4,8 @@ namespace lexeo\yii2scheduling;
 
 use Yii;
 use yii\base\Component;
+use yii\base\InvalidConfigException;
+use yii\console\Application;
 use yii\mutex\FileMutex;
 use yii\mutex\Mutex;
 
@@ -30,17 +32,28 @@ class Schedule extends Component
     /**
      * @var string The name of cli script
      */
-    public $cliScriptName = 'yii';
+    public $yiiCliEntryPoint = 'yii';
 
     /**
      * Schedule constructor.
      * @param array $config
+     * @throws InvalidConfigException
      */
     public function __construct(array $config = [])
     {
-        $this->mutex = Yii::$app->has('mutex') ? Yii::$app->get('mutex') : (new FileMutex());
-
+        $this->mutex = Yii::$app->has('mutex') ? Yii::$app->get('mutex') : new FileMutex();
         parent::__construct($config);
+
+        $absoluteYiiPath = realpath($this->yiiCliEntryPoint);
+        if (false === $absoluteYiiPath) {
+            if (!Yii::$app instanceof Application) {
+                throw new InvalidConfigException(
+                    'Unable to locate Yii CLI entry point. Use "yiiCliEntryPoint" to provide a valid path.'
+                 );
+            }
+            $absoluteYiiPath = Yii::$app->request->scriptFile;
+        }
+        $this->yiiCliEntryPoint = $absoluteYiiPath;
     }
 
     /**
@@ -67,7 +80,7 @@ class Schedule extends Component
      */
     public function command($command)
     {
-        return $this->exec(PHP_BINARY . ' ' . $this->cliScriptName . ' ' . $command);
+        return $this->exec(PHP_BINARY . ' ' . $this->yiiCliEntryPoint . ' ' . $command);
     }
 
     /**

@@ -39,7 +39,7 @@ class ScheduleTest extends AbstractTestCase
         $event = $schedule->command($cmd);
 
         $this->assertInstanceOf(Event::className(), $event);
-        $this->assertStringEndsWith($schedule->cliScriptName . ' ' . $cmd, $event->getCommand());
+        $this->assertStringEndsWith($schedule->yiiCliEntryPoint . ' ' . $cmd, $event->getCommand());
     }
 
     public function testCreatesCallbackEvent()
@@ -56,5 +56,27 @@ class ScheduleTest extends AbstractTestCase
         $propReflection->setAccessible(true);
 
         $this->assertSame($params, $propReflection->getValue($event));
+    }
+
+    public function testUsesYiiCliEntryPointAbsolutePath()
+    {
+        $bootstrapFile = 'tests/bootstrap.php';
+        $schedule = new Schedule(['yiiCliEntryPoint' => $bootstrapFile]);
+
+        $this->assertStringEndsWith($bootstrapFile, $schedule->yiiCliEntryPoint);
+        $this->assertNotEquals($bootstrapFile, $schedule->yiiCliEntryPoint);
+    }
+
+    public function testFailsIfYiiCliEntryPointInvalid()
+    {
+        $this->setExpectedException('\yii\base\InvalidConfigException');
+        $this->mockApplication([
+            'components' => [
+                'schedule' => [
+                    'class' => Schedule::className(),
+                    'yiiCliEntryPoint' => '_invalid_path_',
+                ],
+            ],
+        ], \yii\web\Application::className());
     }
 }
