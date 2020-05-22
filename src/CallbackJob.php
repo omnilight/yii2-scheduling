@@ -5,10 +5,7 @@ namespace lexeo\yii2scheduling;
 use InvalidArgumentException;
 use yii\base\InvalidConfigException;
 
-/**
- * Class CallbackEvent
- */
-class CallbackEvent extends AbstractEvent
+class CallbackJob extends AbstractJob
 {
     /**
      * The callback to call.

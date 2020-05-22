@@ -259,7 +259,7 @@ But if you what to give extensions ability to register cron jobs, you should def
 Using addition functions
 ------------------------
 
-If you want to use `thenPing` method of the Event, you should add the following string to the `composer.json` of your app:
+If you want to use `thenPing` method of the Job, you should add the following string to the `composer.json` of your app:
 ```
 "guzzlehttp/guzzle": "~5.0"
 ```

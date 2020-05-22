@@ -13,7 +13,7 @@ use Yii;
  * @property-read string $command
  * @property-read int|null $exitCode
  */
-class Event extends AbstractEvent
+class ShellJob extends AbstractJob
 {
     /**
      * Command string

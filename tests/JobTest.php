@@ -3,12 +3,12 @@
 namespace lexeo\yii2scheduling\tests;
 
 use DateTimeZone;
-use lexeo\yii2scheduling\AbstractEvent;
+use lexeo\yii2scheduling\AbstractJob;
 
 class JobTest extends AbstractTestCase
 {
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|AbstractEvent $eventMock
+     * @var \PHPUnit_Framework_MockObject_MockObject|AbstractJob $eventMock
      */
     protected $eventMock;
 
@@ -18,7 +18,7 @@ class JobTest extends AbstractTestCase
     protected function setUp()
     {
         parent::setUp();
-        $this->eventMock = $this->getMockForAbstractClass(AbstractEvent::className());
+        $this->eventMock = $this->getMockForAbstractClass(AbstractJob::className());
     }
 
     public function testTimezoneAcceptsBothStringAndDateTimeZone()

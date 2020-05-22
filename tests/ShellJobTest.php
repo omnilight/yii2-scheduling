@@ -2,7 +2,7 @@
 
 namespace lexeo\yii2scheduling\tests;
 
-use lexeo\yii2scheduling\Event;
+use lexeo\yii2scheduling\ShellJob;
 use Symfony\Component\Process\Process;
 use Yii;
 use yii\base\ModelEvent;
@@ -89,7 +89,7 @@ class ShellJobTest extends AbstractTestCase
 
         $fail = true;
         $eventMock->on($eventMock::EVENT_BEFORE_RUN, function (ModelEvent $e) use (&$fail) {
-            $this->assertInstanceOf(Event::className(), $e->sender);
+            $this->assertInstanceOf(ShellJob::className(), $e->sender);
             $this->assertTrue($e->isValid);
             $fail = false;
         });
@@ -110,7 +110,7 @@ class ShellJobTest extends AbstractTestCase
         // expect foreground run triggers complete
         $fail = true;
         $completeHandler = function (\yii\base\Event $e) use (&$fail, $expectedExitCode) {
-            $this->assertInstanceOf(Event::className(), $e->sender);
+            $this->assertInstanceOf(ShellJob::className(), $e->sender);
             $this->assertSame($expectedExitCode, $e->sender->exitCode);
             $fail = false;
         };
@@ -133,7 +133,7 @@ class ShellJobTest extends AbstractTestCase
         // expect finishing background triggers complete
         $fail = true;
         $completeHandler = function (\yii\base\Event $e) use (&$fail, $expectedExitCode) {
-            $this->assertInstanceOf(Event::className(), $e->sender);
+            $this->assertInstanceOf(ShellJob::className(), $e->sender);
             $this->assertSame($expectedExitCode, $e->sender->exitCode);
             $fail = false;
         };
@@ -192,11 +192,11 @@ class ShellJobTest extends AbstractTestCase
     /**
      * @param string $command
      * @param array|null $methods
-     * @return \PHPUnit_Framework_MockObject_MockObject|Event
+     * @return \PHPUnit_Framework_MockObject_MockObject|ShellJob
      */
     private function createEventMock($command, $methods = [])
     {
-        return $this->getMock(Event::className(), $methods, [$command]);
+        return $this->getMock(ShellJob::className(), $methods, [$command]);
     }
 
 

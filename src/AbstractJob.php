@@ -11,7 +11,7 @@ use yii\base\ModelEvent;
 use yii\mutex\FileMutex;
 use yii\mutex\Mutex;
 
-abstract class AbstractEvent extends \yii\base\Component
+abstract class AbstractJob extends \yii\base\Component
 {
     const EVENT_BEFORE_RUN = 'beforeRun';
     const EVENT_AFTER_COMPLETE = 'afterComplete';

@@ -18,7 +18,7 @@ class Schedule extends Component
     /**
      * All of the events on the schedule.
      *
-     * @var AbstractEvent[]
+     * @var AbstractJob[]
      */
     protected $events = [];
 
@@ -61,11 +61,11 @@ class Schedule extends Component
      *
      * @param string $callback
      * @param array $parameters
-     * @return CallbackEvent
+     * @return CallbackJob
      */
     public function call($callback, array $parameters = [])
     {
-        $event = new CallbackEvent($callback, $parameters);
+        $event = new CallbackJob($callback, $parameters);
         $event->setMutex($this->mutex);
 
         $this->events[] = $event;
@@ -76,7 +76,7 @@ class Schedule extends Component
      * Add a new cli command event to the schedule.
      *
      * @param string $command
-     * @return Event
+     * @return ShellJob
      */
     public function command($command)
     {
@@ -87,11 +87,11 @@ class Schedule extends Component
      * Add a new command event to the schedule.
      *
      * @param string $command
-     * @return Event
+     * @return ShellJob
      */
     public function exec($command)
     {
-        $event = new Event($command);
+        $event = new ShellJob($command);
         $event->setMutex($this->mutex);
 
         $this->events[] = $event;
@@ -99,7 +99,7 @@ class Schedule extends Component
     }
 
     /**
-     * @return AbstractEvent[]
+     * @return AbstractJob[]
      */
     public function getEvents()
     {
@@ -109,11 +109,11 @@ class Schedule extends Component
     /**
      * Get all of the events on the schedule that are due.
      *
-     * @return AbstractEvent[]
+     * @return AbstractJob[]
      */
     public function dueEvents()
     {
-        return array_filter($this->events, static function (AbstractEvent $event) {
+        return array_filter($this->events, static function (AbstractJob $event) {
             return $event->isDue();
         });
     }

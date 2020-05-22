@@ -75,7 +75,7 @@ class ScheduleController extends Controller
         $this->importScheduleFile();
 
         foreach ($this->schedule->getEvents() as $event) {
-            /** @var Event $event */
+            /** @var ShellJob $event */
             if ($id === $event->mutexName()) {
                 $event->finish($exitCode);
                 break;

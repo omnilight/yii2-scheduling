@@ -2,8 +2,8 @@
 
 namespace lexeo\yii2scheduling\tests;
 
-use lexeo\yii2scheduling\CallbackEvent;
-use lexeo\yii2scheduling\Event;
+use lexeo\yii2scheduling\CallbackJob;
+use lexeo\yii2scheduling\ShellJob;
 use lexeo\yii2scheduling\Schedule;
 
 class ScheduleTest extends AbstractTestCase
@@ -25,7 +25,7 @@ class ScheduleTest extends AbstractTestCase
         $cmd = 'php -i';
         $event = $schedule->exec($cmd);
         $this->assertCount(1, $schedule->getEvents());
-        $this->assertInstanceOf(Event::className(), $event);
+        $this->assertInstanceOf(ShellJob::className(), $event);
         $this->assertSame($cmd, $event->getCommand());
     }
 
@@ -38,7 +38,7 @@ class ScheduleTest extends AbstractTestCase
         $cmd = 'test/me';
         $event = $schedule->command($cmd);
 
-        $this->assertInstanceOf(Event::className(), $event);
+        $this->assertInstanceOf(ShellJob::className(), $event);
         $this->assertStringEndsWith($schedule->yiiCliEntryPoint . ' ' . $cmd, $event->getCommand());
     }
 
@@ -51,7 +51,7 @@ class ScheduleTest extends AbstractTestCase
         }, $params);
 
         $this->assertCount(1, $schedule->getEvents());
-        $this->assertInstanceOf(CallbackEvent::className(), $event);
+        $this->assertInstanceOf(CallbackJob::className(), $event);
         $propReflection = (new \ReflectionObject($event))->getProperty('parameters');
         $propReflection->setAccessible(true);
 
