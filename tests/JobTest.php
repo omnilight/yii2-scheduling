@@ -5,7 +5,7 @@ namespace lexeo\yii2scheduling\tests;
 use DateTimeZone;
 use lexeo\yii2scheduling\AbstractEvent;
 
-class EventTest extends AbstractTestCase
+class JobTest extends AbstractTestCase
 {
     /**
      * @var \PHPUnit_Framework_MockObject_MockObject|AbstractEvent $eventMock

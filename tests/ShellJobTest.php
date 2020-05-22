@@ -10,7 +10,7 @@ use yii\console\Controller;
 use yii\console\Request;
 use yii\mutex\Mutex;
 
-class CliEventTest extends AbstractTestCase
+class ShellJobTest extends AbstractTestCase
 {
 
     public function testBuildsSimpleCommand()

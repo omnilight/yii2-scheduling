@@ -4,7 +4,7 @@ namespace lexeo\yii2scheduling\tests;
 
 use lexeo\yii2scheduling\AbstractEvent;
 
-class EventFrequencyTest extends AbstractTestCase
+class JobFrequencyTest extends AbstractTestCase
 {
     /**
      * @var \PHPUnit_Framework_MockObject_MockObject|AbstractEvent
