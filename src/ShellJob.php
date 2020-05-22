@@ -8,7 +8,7 @@ use yii\mail\MailerInterface;
 use Yii;
 
 /**
- * Class Event
+ * Class ShellJob
  *
  * @property-read string $command
  * @property-read int|null $exitCode
@@ -58,7 +58,7 @@ class ShellJob extends AbstractJob
     protected $exitCode;
 
     /**
-     * Create a new event instance.
+     * Create a new job instance.
      *
      * @param string $command
      * @param array $config
@@ -84,7 +84,7 @@ class ShellJob extends AbstractJob
     }
 
     /**
-     * Call all of the "after" callbacks for the event.
+     * Call all of the "after" callbacks for the job.
      *
      * @param int $exitCode
      * @return void
@@ -291,7 +291,7 @@ class ShellJob extends AbstractJob
     }
 
     /**
-     * E-mail the output of the event to the recipients.
+     * E-mail the output of the job to the recipients.
      *
      * @param MailerInterface $mailer
      * @param array $addresses

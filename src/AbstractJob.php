@@ -17,7 +17,7 @@ abstract class AbstractJob extends \yii\base\Component
     const EVENT_AFTER_COMPLETE = 'afterComplete';
 
     /**
-     * The cron expression representing the event's frequency.
+     * The cron expression representing the frequency of running.
      *
      * @var string
      */
@@ -41,7 +41,7 @@ abstract class AbstractJob extends \yii\base\Component
      */
     protected $rejects = [];
     /**
-     * The human readable description of the event.
+     * The human readable description of the job.
      *
      * @var string
      */
@@ -66,12 +66,12 @@ abstract class AbstractJob extends \yii\base\Component
     protected $omitErrors = false;
 
     /**
-     * Run the given event.
+     * Run the given job.
      */
     abstract public function run();
 
     /**
-     * Get the summary of the event for display.
+     * Get the summary of the job for display.
      *
      * @return string
      */
@@ -160,7 +160,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Set the human-friendly description of the event.
+     * Set the human-friendly description of the job.
      *
      * @param string $description
      * @return $this
@@ -172,7 +172,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Get the Cron expression for the event.
+     * Get the Cron expression for the job.
      *
      * @return string
      */
@@ -206,7 +206,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Determine if the given event should run based on the Cron expression.
+     * Determine if the given job should run based on the Cron expression.
      *
      * @return bool
      */
@@ -227,7 +227,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Determine if the filters pass for the event.
+     * Determine if the filters pass for the job.
      *
      * @return bool
      */
@@ -247,7 +247,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * The Cron expression representing the event's frequency.
+     * The Cron expression representing the frequency of running.
      *
      * @param string $expression
      * @return $this
@@ -259,7 +259,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run hourly.
+     * Schedule the job to run hourly.
      *
      * @return $this
      */
@@ -269,7 +269,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run hourly at a given offset in the hour.
+     * Schedule the job to run hourly at a given offset in the hour.
      *
      * @param array|int|string $offset
      * @return $this
@@ -281,7 +281,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run daily.
+     * Schedule the job to run daily.
      *
      * @return $this
      */
@@ -303,7 +303,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run daily at a given time (10:00, 19:30, etc).
+     * Schedule the job to run daily at a given time (10:00, 19:30, etc).
      *
      * @param string $time
      * @return $this
@@ -316,7 +316,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run twice daily.
+     * Schedule the job to run twice daily.
      *
      * @param int $first
      * @param int $second
@@ -330,7 +330,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run only on weekdays.
+     * Schedule the job to run only on weekdays.
      *
      * @return $this
      */
@@ -340,7 +340,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run only on Mondays.
+     * Schedule the job to run only on Mondays.
      *
      * @return $this
      */
@@ -362,7 +362,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run only on Tuesdays.
+     * Schedule the job to run only on Tuesdays.
      *
      * @return $this
      */
@@ -372,7 +372,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run only on Wednesdays.
+     * Schedule the job to run only on Wednesdays.
      *
      * @return $this
      */
@@ -382,7 +382,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run only on Thursdays.
+     * Schedule the job to run only on Thursdays.
      *
      * @return $this
      */
@@ -392,7 +392,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run only on Fridays.
+     * Schedule the job to run only on Fridays.
      *
      * @return $this
      */
@@ -402,7 +402,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run only on Saturdays.
+     * Schedule the job to run only on Saturdays.
      *
      * @return $this
      */
@@ -412,7 +412,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run only on Sundays.
+     * Schedule the job to run only on Sundays.
      *
      * @return $this
      */
@@ -422,7 +422,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run weekly.
+     * Schedule the job to run weekly.
      *
      * @return $this
      */
@@ -434,7 +434,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run weekly on a given day and time.
+     * Schedule the job to run weekly on a given day and time.
      *
      * @param int $day
      * @param string $time
@@ -447,7 +447,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run monthly.
+     * Schedule the job to run monthly.
      *
      * @return $this
      */
@@ -459,7 +459,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run monthly on a given day and time.
+     * Schedule the job to run monthly on a given day and time.
      *
      * @param int $day
      * @param string $time
@@ -472,7 +472,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run twice monthly.
+     * Schedule the job to run twice monthly.
      *
      * @param int $first
      * @param int $second
@@ -488,7 +488,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run quarterly.
+     * Schedule the job to run quarterly.
      *
      * @return $this
      */
@@ -501,7 +501,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run yearly.
+     * Schedule the job to run yearly.
      *
      * @return $this
      */
@@ -514,7 +514,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run every minute.
+     * Schedule the job to run every minute.
      *
      * @return $this
      */
@@ -524,7 +524,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run every N minutes.
+     * Schedule the job to run every N minutes.
      *
      * @param int|string $minutes
      * @return $this
@@ -535,7 +535,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run every five minutes.
+     * Schedule the job to run every five minutes.
      *
      * @return $this
      */
@@ -545,7 +545,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run every ten minutes.
+     * Schedule the job to run every ten minutes.
      *
      * @return $this
      */
@@ -555,7 +555,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Schedule the event to run every thirty minutes.
+     * Schedule the job to run every thirty minutes.
      *
      * @return $this
      */
@@ -597,7 +597,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Do not allow the event to overlap each other.
+     * Do not allow the job to overlap each other.
      *
      * @return $this
      */
@@ -622,7 +622,7 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Allow the event to only run on one server for each cron expression.
+     * Allow the job to only run on one server for each cron expression.
      *
      * @return $this
      */

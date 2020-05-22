@@ -16,11 +16,11 @@ use yii\mutex\Mutex;
 class Schedule extends Component
 {
     /**
-     * All of the events on the schedule.
+     * All of the jobs on the schedule.
      *
      * @var AbstractJob[]
      */
-    protected $events = [];
+    protected $jobs = [];
 
     /**
      * The mutex implementation.
@@ -57,7 +57,7 @@ class Schedule extends Component
     }
 
     /**
-     * Add a new callback event to the schedule.
+     * Add a new callback job to the schedule.
      *
      * @param string $callback
      * @param array $parameters
@@ -65,15 +65,15 @@ class Schedule extends Component
      */
     public function call($callback, array $parameters = [])
     {
-        $event = new CallbackJob($callback, $parameters);
-        $event->setMutex($this->mutex);
+        $job = new CallbackJob($callback, $parameters);
+        $job->setMutex($this->mutex);
 
-        $this->events[] = $event;
-        return $event;
+        $this->jobs[] = $job;
+        return $job;
     }
 
     /**
-     * Add a new cli command event to the schedule.
+     * Add a new cli command job to the schedule.
      *
      * @param string $command
      * @return ShellJob
@@ -84,37 +84,37 @@ class Schedule extends Component
     }
 
     /**
-     * Add a new command event to the schedule.
+     * Add a new command job to the schedule.
      *
      * @param string $command
      * @return ShellJob
      */
     public function exec($command)
     {
-        $event = new ShellJob($command);
-        $event->setMutex($this->mutex);
+        $job = new ShellJob($command);
+        $job->setMutex($this->mutex);
 
-        $this->events[] = $event;
-        return $event;
+        $this->jobs[] = $job;
+        return $job;
     }
 
     /**
      * @return AbstractJob[]
      */
-    public function getEvents()
+    public function getJobs()
     {
-        return $this->events;
+        return $this->jobs;
     }
 
     /**
-     * Get all of the events on the schedule that are due.
+     * Get all of the jobs on the schedule that are due.
      *
      * @return AbstractJob[]
      */
-    public function dueEvents()
+    public function dueJobs()
     {
-        return array_filter($this->events, static function (AbstractJob $event) {
-            return $event->isDue();
+        return array_filter($this->jobs, static function (AbstractJob $job) {
+            return $job->isDue();
         });
     }
 }

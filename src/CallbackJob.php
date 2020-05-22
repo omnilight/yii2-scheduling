@@ -27,7 +27,7 @@ class CallbackJob extends AbstractJob
     public $result;
 
     /**
-     * Create a new event instance.
+     * Create a new job instance.
      *
      * @param callable $callback
      * @param array $parameters
@@ -37,7 +37,7 @@ class CallbackJob extends AbstractJob
     public function __construct($callback, array $parameters = [], $config = [])
     {
         if (!is_callable($callback)) {
-            throw new InvalidArgumentException('Invalid scheduled callback event. Must be callable.');
+            throw new InvalidArgumentException('Invalid scheduled callback job. Must be callable.');
         }
         $this->callback = $callback;
         $this->parameters = $parameters;
@@ -64,7 +64,7 @@ class CallbackJob extends AbstractJob
     {
         if (!$this->description) {
             throw new InvalidConfigException(
-                "A scheduled event name is required to prevent overlapping. Use the 'description' method before 'withoutOverlapping'."
+                "A scheduled job name is required to prevent overlapping. Use the 'description' method before 'withoutOverlapping'."
             );
         }
         return 'framework/schedule-' . sha1($this->description);

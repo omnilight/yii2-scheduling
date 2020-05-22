@@ -9,7 +9,7 @@ class JobFrequencyTest extends AbstractTestCase
     /**
      * @var \PHPUnit_Framework_MockObject_MockObject|AbstractJob
      */
-    protected $eventMock;
+    protected $jobMock;
 
     /**
      * @inheritDoc
@@ -17,112 +17,112 @@ class JobFrequencyTest extends AbstractTestCase
     protected function setUp()
     {
         parent::setUp();
-        $this->eventMock = $this->getMockForAbstractClass('lexeo\yii2scheduling\AbstractJob');
+        $this->jobMock = $this->getMockForAbstractClass('lexeo\yii2scheduling\AbstractJob');
     }
 
 
     public function testEveryMinute()
     {
-        $this->assertSame('* * * * *', $this->eventMock->getExpression());
-        $this->assertSame('* * * * *', $this->eventMock->everyMinute()->getExpression());
+        $this->assertSame('* * * * *', $this->jobMock->getExpression());
+        $this->assertSame('* * * * *', $this->jobMock->everyMinute()->getExpression());
     }
 
     public function testEveryNMinutes()
     {
-        $this->assertSame('* * * * *', $this->eventMock->getExpression());
-        $this->assertSame('*/6 * * * *', $this->eventMock->everyNMinutes(6)->getExpression());
-        $this->assertSame('*/15 * * * *', $this->eventMock->everyNMinutes(15)->getExpression());
+        $this->assertSame('* * * * *', $this->jobMock->getExpression());
+        $this->assertSame('*/6 * * * *', $this->jobMock->everyNMinutes(6)->getExpression());
+        $this->assertSame('*/15 * * * *', $this->jobMock->everyNMinutes(15)->getExpression());
     }
 
     public function testEveryFiveMinutes()
     {
-        $this->assertSame('*/5 * * * *', $this->eventMock->everyFiveMinutes()->getExpression());
+        $this->assertSame('*/5 * * * *', $this->jobMock->everyFiveMinutes()->getExpression());
     }
 
     public function testDaily()
     {
-        $this->assertSame('0 0 * * *', $this->eventMock->daily()->getExpression());
+        $this->assertSame('0 0 * * *', $this->jobMock->daily()->getExpression());
     }
 
     public function testTwiceDaily()
     {
-        $this->assertSame('0 3,15 * * *', $this->eventMock->twiceDaily(3, 15)->getExpression());
+        $this->assertSame('0 3,15 * * *', $this->jobMock->twiceDaily(3, 15)->getExpression());
     }
 
     public function testOverrideWithHourly()
     {
-        $this->assertSame('0 * * * *', $this->eventMock->everyFiveMinutes()->hourly()->getExpression());
-        $this->assertSame('37 * * * *', $this->eventMock->hourlyAt(37)->getExpression());
-        $this->assertSame('15,30,45 * * * *', $this->eventMock->hourlyAt([15, 30, 45])->getExpression());
+        $this->assertSame('0 * * * *', $this->jobMock->everyFiveMinutes()->hourly()->getExpression());
+        $this->assertSame('37 * * * *', $this->jobMock->hourlyAt(37)->getExpression());
+        $this->assertSame('15,30,45 * * * *', $this->jobMock->hourlyAt([15, 30, 45])->getExpression());
     }
 
     public function testMonthlyOn()
     {
-        $this->assertSame('0 15 4 * *', $this->eventMock->monthlyOn(4, '15:00')->getExpression());
+        $this->assertSame('0 15 4 * *', $this->jobMock->monthlyOn(4, '15:00')->getExpression());
     }
 
     public function testTwiceMonthly()
     {
-        $this->assertSame('0 0 1,16 * *', $this->eventMock->twiceMonthly(1, 16)->getExpression());
+        $this->assertSame('0 0 1,16 * *', $this->jobMock->twiceMonthly(1, 16)->getExpression());
     }
 
     public function testMonthlyOnWithMinutes()
     {
-        $this->assertSame('15 15 4 * *', $this->eventMock->monthlyOn(4, '15:15')->getExpression());
+        $this->assertSame('15 15 4 * *', $this->jobMock->monthlyOn(4, '15:15')->getExpression());
     }
 
     public function testWeekdaysDaily()
     {
-        $this->assertSame('0 0 * * 1-5', $this->eventMock->weekdays()->daily()->getExpression());
+        $this->assertSame('0 0 * * 1-5', $this->jobMock->weekdays()->daily()->getExpression());
     }
 
     public function testWeekdaysHourly()
     {
-        $this->assertSame('0 * * * 1-5', $this->eventMock->weekdays()->hourly()->getExpression());
+        $this->assertSame('0 * * * 1-5', $this->jobMock->weekdays()->hourly()->getExpression());
     }
 
     public function testWeekdays()
     {
-        $this->assertSame('* * * * 1-5', $this->eventMock->weekdays()->getExpression());
+        $this->assertSame('* * * * 1-5', $this->jobMock->weekdays()->getExpression());
     }
 
     public function testSundays()
     {
-        $this->assertSame('* * * * 0', $this->eventMock->sundays()->getExpression());
+        $this->assertSame('* * * * 0', $this->jobMock->sundays()->getExpression());
     }
 
     public function testMondays()
     {
-        $this->assertSame('* * * * 1', $this->eventMock->mondays()->getExpression());
+        $this->assertSame('* * * * 1', $this->jobMock->mondays()->getExpression());
     }
 
     public function testTuesdays()
     {
-        $this->assertSame('* * * * 2', $this->eventMock->tuesdays()->getExpression());
+        $this->assertSame('* * * * 2', $this->jobMock->tuesdays()->getExpression());
     }
 
     public function testWednesdays()
     {
-        $this->assertSame('* * * * 3', $this->eventMock->wednesdays()->getExpression());
+        $this->assertSame('* * * * 3', $this->jobMock->wednesdays()->getExpression());
     }
 
     public function testThursdays()
     {
-        $this->assertSame('* * * * 4', $this->eventMock->thursdays()->getExpression());
+        $this->assertSame('* * * * 4', $this->jobMock->thursdays()->getExpression());
     }
 
     public function testFridays()
     {
-        $this->assertSame('* * * * 5', $this->eventMock->fridays()->getExpression());
+        $this->assertSame('* * * * 5', $this->jobMock->fridays()->getExpression());
     }
 
     public function testSaturdays()
     {
-        $this->assertSame('* * * * 6', $this->eventMock->saturdays()->getExpression());
+        $this->assertSame('* * * * 6', $this->jobMock->saturdays()->getExpression());
     }
 
     public function testQuarterly()
     {
-        $this->assertSame('0 0 1 1-12/3 *', $this->eventMock->quarterly()->getExpression());
+        $this->assertSame('0 0 1 1-12/3 *', $this->jobMock->quarterly()->getExpression());
     }
 }

@@ -51,21 +51,21 @@ class ScheduleController extends Controller
     {
         $this->importScheduleFile();
 
-        $events = $this->schedule->dueEvents();
+        $jobs = $this->schedule->dueJobs();
 
-        foreach ($events as $event) {
-            if (!$event->filtersPass()) {
+        foreach ($jobs as $job) {
+            if (!$job->filtersPass()) {
                 continue;
             }
 
             if ($this->omitErrors !== null) {
-                $event->omitErrors($this->omitErrors);
+                $job->omitErrors($this->omitErrors);
             }
-            $this->stdout('Running scheduled command: ' . $event->getSummaryForDisplay() . "\n");
-            $event->run();
+            $this->stdout('Running scheduled command: ' . $job->getSummaryForDisplay() . "\n");
+            $job->run();
         }
 
-        if (count($events) === 0) {
+        if (count($jobs) === 0) {
             $this->stdout("No scheduled commands are ready to run.\n");
         }
     }
@@ -74,10 +74,10 @@ class ScheduleController extends Controller
     {
         $this->importScheduleFile();
 
-        foreach ($this->schedule->getEvents() as $event) {
-            /** @var ShellJob $event */
-            if ($id === $event->mutexName()) {
-                $event->finish($exitCode);
+        foreach ($this->schedule->getJobs() as $job) {
+            /** @var ShellJob $job */
+            if ($id === $job->mutexName()) {
+                $job->finish($exitCode);
                 break;
             }
         }

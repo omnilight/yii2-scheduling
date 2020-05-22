@@ -18,18 +18,18 @@ class ShellJobTest extends AbstractTestCase
         $cmd = 'php -i';
         $defOutput = '/dev/null';
 
-        $eventMock = $this->createEventMock($cmd, ['getDefaultOutput']);
-        $eventMock->expects($this->any())
+        $jobMock = $this->createJobMock($cmd, ['getDefaultOutput']);
+        $jobMock->expects($this->any())
             ->method('getDefaultOutput')
             ->willReturn($defOutput);
 
-        $this->assertSame("{$cmd} > {$defOutput}", $eventMock->buildCommand());
+        $this->assertSame("{$cmd} > {$defOutput}", $jobMock->buildCommand());
 
-        $eventMock->appendOutputTo($defOutput);
-        $this->assertSame("{$cmd} >> {$defOutput}", $eventMock->buildCommand());
+        $jobMock->appendOutputTo($defOutput);
+        $this->assertSame("{$cmd} >> {$defOutput}", $jobMock->buildCommand());
 
-        $eventMock->sendOutputTo($defOutput);
-        $this->assertSame("{$cmd} > {$defOutput}", $eventMock->buildCommand());
+        $jobMock->sendOutputTo($defOutput);
+        $this->assertSame("{$cmd} > {$defOutput}", $jobMock->buildCommand());
     }
 
     /**
@@ -37,19 +37,19 @@ class ShellJobTest extends AbstractTestCase
      */
     public function testBuildsCommandChangingUser()
     {
-        $eventMock = $this->createEventMock('php -i', ['isWindows']);
-        $eventMock->expects($this->any())
+        $jobMock = $this->createJobMock('php -i', ['isWindows']);
+        $jobMock->expects($this->any())
             ->method('isWindows')
             ->willReturn(false);
 
-        $cmd = $eventMock->getCommand();
-        $defOutput = $eventMock->getDefaultOutput();
+        $cmd = $jobMock->getCommand();
+        $defOutput = $jobMock->getDefaultOutput();
 
-        $this->assertSame("{$cmd} > {$defOutput}", $eventMock->buildCommand());
+        $this->assertSame("{$cmd} > {$defOutput}", $jobMock->buildCommand());
 
         $userName = 'admin';
-        $eventMock->user($userName);
-        $this->assertSame("sudo -u {$userName} -- sh -c '{$cmd} > {$defOutput}'", $eventMock->buildCommand());
+        $jobMock->user($userName);
+        $this->assertSame("sudo -u {$userName} -- sh -c '{$cmd} > {$defOutput}'", $jobMock->buildCommand());
     }
 
     public function testBuildsBackgroundCommand()
@@ -58,15 +58,15 @@ class ShellJobTest extends AbstractTestCase
 
         $cmd = 'controller/action';
         $mutexName = '12345';
-        $eventMock = $this->createEventMock($cmd, ['isWindows', 'mutexName']);
-        $eventMock->expects($this->any())
+        $jobMock = $this->createJobMock($cmd, ['isWindows', 'mutexName']);
+        $jobMock->expects($this->any())
             ->method('isWindows')
             ->willReturn(false);
-        $eventMock->expects($this->any())
+        $jobMock->expects($this->any())
             ->method('mutexName')
             ->willReturn($mutexName);
 
-        $eventMock->runInBackground(true);
+        $jobMock->runInBackground(true);
         $callbackCmd = strtr('{php} {yii} {controller}/finish "{id}" "{exitCode}"', [
             '{php}' => PHP_BINARY,
             '{yii}' => Yii::$app->request->scriptFile,
@@ -75,25 +75,25 @@ class ShellJobTest extends AbstractTestCase
             '{exitCode}' => '$?',
         ]);
         $this->assertSame(
-            "({$cmd} > {$eventMock->getDefaultOutput()} ; {$callbackCmd}) > /dev/null 2>&1 &",
-            $eventMock->buildCommand()
+            "({$cmd} > {$jobMock->getDefaultOutput()} ; {$callbackCmd}) > /dev/null 2>&1 &",
+            $jobMock->buildCommand()
         );
     }
 
     public function testTriggersBeforeRunEvent()
     {
-        $eventMock = $this->createEventMock('php -i', ['createProcess']);
-        $eventMock->expects($this->once())
+        $jobMock = $this->createJobMock('php -i', ['createProcess']);
+        $jobMock->expects($this->once())
             ->method('createProcess')
             ->willReturn($this->createForegroundProcessMock(0));
 
         $fail = true;
-        $eventMock->on($eventMock::EVENT_BEFORE_RUN, function (ModelEvent $e) use (&$fail) {
+        $jobMock->on($jobMock::EVENT_BEFORE_RUN, function (ModelEvent $e) use (&$fail) {
             $this->assertInstanceOf(ShellJob::className(), $e->sender);
             $this->assertTrue($e->isValid);
             $fail = false;
         });
-        $eventMock->run();
+        $jobMock->run();
         $fail && $this->fail('On beforeRun handler was not called.');
     }
 
@@ -102,8 +102,8 @@ class ShellJobTest extends AbstractTestCase
         $this->mockApplicationRequestScriptFileAndControllerId('yii', 'schedule');
 
         $expectedExitCode = 113;
-        $eventMock = $this->createEventMock('php -i', ['createProcess']);
-        $eventMock->expects($this->exactly(2))
+        $jobMock = $this->createJobMock('php -i', ['createProcess']);
+        $jobMock->expects($this->exactly(2))
             ->method('createProcess')
             ->willReturn($this->createForegroundProcessMock($expectedExitCode));
 
@@ -114,10 +114,10 @@ class ShellJobTest extends AbstractTestCase
             $this->assertSame($expectedExitCode, $e->sender->exitCode);
             $fail = false;
         };
-        $eventMock->on($eventMock::EVENT_AFTER_COMPLETE, $completeHandler);
-        $eventMock->run();
+        $jobMock->on($jobMock::EVENT_AFTER_COMPLETE, $completeHandler);
+        $jobMock->run();
         $fail && $this->fail('On afterComplete handler was not called.');
-        $eventMock->off($eventMock::EVENT_AFTER_COMPLETE, $completeHandler);
+        $jobMock->off($jobMock::EVENT_AFTER_COMPLETE, $completeHandler);
 
         // expect background run does NOT triggers complete
         $fail = false;
@@ -125,10 +125,10 @@ class ShellJobTest extends AbstractTestCase
             $this->assertNull($e->sender->exitCode);
             $fail = true;
         };
-        $eventMock->on($eventMock::EVENT_AFTER_COMPLETE, $completeHandler);
-        $eventMock->runInBackground()->run();
+        $jobMock->on($jobMock::EVENT_AFTER_COMPLETE, $completeHandler);
+        $jobMock->runInBackground()->run();
         $fail && $this->fail('On afterComplete handler was called.');
-        $eventMock->off($eventMock::EVENT_AFTER_COMPLETE, $completeHandler);
+        $jobMock->off($jobMock::EVENT_AFTER_COMPLETE, $completeHandler);
 
         // expect finishing background triggers complete
         $fail = true;
@@ -137,8 +137,8 @@ class ShellJobTest extends AbstractTestCase
             $this->assertSame($expectedExitCode, $e->sender->exitCode);
             $fail = false;
         };
-        $eventMock->on($eventMock::EVENT_AFTER_COMPLETE, $completeHandler);
-        $eventMock->finish($expectedExitCode);
+        $jobMock->on($jobMock::EVENT_AFTER_COMPLETE, $completeHandler);
+        $jobMock->finish($expectedExitCode);
         $fail && $this->fail('On afterComplete handler was not called.');
     }
 
@@ -153,26 +153,26 @@ class ShellJobTest extends AbstractTestCase
             ->method('acquire')
             ->willReturnOnConsecutiveCalls(true, false);
 
-        $eventMock = $this->createEventMock('php -i', ['createProcess']);
-        $eventMock->expects($this->any())
+        $jobMock = $this->createJobMock('php -i', ['createProcess']);
+        $jobMock->expects($this->any())
             ->method('createProcess')
             ->willReturn($this->createForegroundProcessMock(0));
-        $eventMock->setMutex($mutexMock);
-        $eventMock->withoutOverlapping();
+        $jobMock->setMutex($mutexMock);
+        $jobMock->withoutOverlapping();
 
         // expect running
         $beforeRunHandler = function (ModelEvent $e) {
             $this->assertTrue($e->isValid);
         };
-        $eventMock->on($eventMock::EVENT_BEFORE_RUN, $beforeRunHandler);
-        $eventMock->run();
-        $eventMock->off($eventMock::EVENT_BEFORE_RUN, $beforeRunHandler);
+        $jobMock->on($jobMock::EVENT_BEFORE_RUN, $beforeRunHandler);
+        $jobMock->run();
+        $jobMock->off($jobMock::EVENT_BEFORE_RUN, $beforeRunHandler);
 
         // expect skipping
-        $eventMock->on($eventMock::EVENT_BEFORE_RUN, function (ModelEvent $e) {
+        $jobMock->on($jobMock::EVENT_BEFORE_RUN, function (ModelEvent $e) {
             $this->assertFalse($e->isValid);
         });
-        $eventMock->run();
+        $jobMock->run();
     }
 
     /**
@@ -194,7 +194,7 @@ class ShellJobTest extends AbstractTestCase
      * @param array|null $methods
      * @return \PHPUnit_Framework_MockObject_MockObject|ShellJob
      */
-    private function createEventMock($command, $methods = [])
+    private function createJobMock($command, $methods = [])
     {
         return $this->getMock(ShellJob::className(), $methods, [$command]);
     }

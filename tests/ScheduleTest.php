@@ -17,45 +17,45 @@ class ScheduleTest extends AbstractTestCase
         $this->mockApplication();
     }
 
-    public function testCreatesCliCommandEvent()
+    public function testCreatesShellCommandJob()
     {
         $schedule = new Schedule();
-        $this->assertCount(0, $schedule->getEvents());
+        $this->assertCount(0, $schedule->getJobs());
 
         $cmd = 'php -i';
-        $event = $schedule->exec($cmd);
-        $this->assertCount(1, $schedule->getEvents());
-        $this->assertInstanceOf(ShellJob::className(), $event);
-        $this->assertSame($cmd, $event->getCommand());
+        $job = $schedule->exec($cmd);
+        $this->assertCount(1, $schedule->getJobs());
+        $this->assertInstanceOf(ShellJob::className(), $job);
+        $this->assertSame($cmd, $job->getCommand());
     }
 
     /**
-     * @depends testCreatesCliCommandEvent
+     * @depends testCreatesShellCommandJob
      */
-    public function testCreatesYiiCommandEvent()
+    public function testCreatesYiiCommandJob()
     {
         $schedule = new Schedule();
         $cmd = 'test/me';
-        $event = $schedule->command($cmd);
+        $job = $schedule->command($cmd);
 
-        $this->assertInstanceOf(ShellJob::className(), $event);
-        $this->assertStringEndsWith($schedule->yiiCliEntryPoint . ' ' . $cmd, $event->getCommand());
+        $this->assertInstanceOf(ShellJob::className(), $job);
+        $this->assertStringEndsWith($schedule->yiiCliEntryPoint . ' ' . $cmd, $job->getCommand());
     }
 
-    public function testCreatesCallbackEvent()
+    public function testCreatesCallbackJob()
     {
         $schedule = new Schedule();
-        $this->assertCount(0, $schedule->getEvents());
+        $this->assertCount(0, $schedule->getJobs());
         $params = [1, 2, 3];
-        $event = $schedule->call(static function () {
+        $job = $schedule->call(static function () {
         }, $params);
 
-        $this->assertCount(1, $schedule->getEvents());
-        $this->assertInstanceOf(CallbackJob::className(), $event);
-        $propReflection = (new \ReflectionObject($event))->getProperty('parameters');
+        $this->assertCount(1, $schedule->getJobs());
+        $this->assertInstanceOf(CallbackJob::className(), $job);
+        $propReflection = (new \ReflectionObject($job))->getProperty('parameters');
         $propReflection->setAccessible(true);
 
-        $this->assertSame($params, $propReflection->getValue($event));
+        $this->assertSame($params, $propReflection->getValue($job));
     }
 
     public function testUsesYiiCliEntryPointAbsolutePath()

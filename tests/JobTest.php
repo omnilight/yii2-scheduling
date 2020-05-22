@@ -8,9 +8,9 @@ use lexeo\yii2scheduling\AbstractJob;
 class JobTest extends AbstractTestCase
 {
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|AbstractJob $eventMock
+     * @var \PHPUnit_Framework_MockObject_MockObject|AbstractJob
      */
-    protected $eventMock;
+    protected $jobMock;
 
     /**
      * @inheritDoc
@@ -18,83 +18,83 @@ class JobTest extends AbstractTestCase
     protected function setUp()
     {
         parent::setUp();
-        $this->eventMock = $this->getMockForAbstractClass(AbstractJob::className());
+        $this->jobMock = $this->getMockForAbstractClass(AbstractJob::className());
     }
 
     public function testTimezoneAcceptsBothStringAndDateTimeZone()
     {
-        $propReflection = (new \ReflectionClass($this->eventMock))->getProperty('timezone');
+        $propReflection = (new \ReflectionClass($this->jobMock))->getProperty('timezone');
         $propReflection->setAccessible(true);
 
-        $this->assertNull($propReflection->getValue($this->eventMock));
+        $this->assertNull($propReflection->getValue($this->jobMock));
 
         $expectedTzString = 'Europe/Moscow';
-        $this->eventMock->timezone($expectedTzString);
-        $this->assertInstanceOf('DateTimeZone', $propReflection->getValue($this->eventMock));
-        $this->assertEquals($expectedTzString, $propReflection->getValue($this->eventMock)->getName());
+        $this->jobMock->timezone($expectedTzString);
+        $this->assertInstanceOf('DateTimeZone', $propReflection->getValue($this->jobMock));
+        $this->assertEquals($expectedTzString, $propReflection->getValue($this->jobMock)->getName());
 
         $timeZone = new DateTimeZone('UTC');
-        $this->eventMock->timezone($timeZone);
-        $this->assertSame($timeZone, $propReflection->getValue($this->eventMock));
+        $this->jobMock->timezone($timeZone);
+        $this->assertSame($timeZone, $propReflection->getValue($this->jobMock));
     }
 
     public function testBooleanFilters()
     {
-        $methodReflection = (new \ReflectionObject($this->eventMock))->getMethod('filtersPass');
+        $methodReflection = (new \ReflectionObject($this->jobMock))->getMethod('filtersPass');
         $methodReflection->setAccessible(true);
-        $this->assertTrue($methodReflection->invoke($this->eventMock));
+        $this->assertTrue($methodReflection->invoke($this->jobMock));
 
-        $this->eventMock->when(true);
-        $this->assertTrue($methodReflection->invoke($this->eventMock));
+        $this->jobMock->when(true);
+        $this->assertTrue($methodReflection->invoke($this->jobMock));
 
-        $this->eventMock->when(false);
-        $this->assertFalse($methodReflection->invoke($this->eventMock));
+        $this->jobMock->when(false);
+        $this->assertFalse($methodReflection->invoke($this->jobMock));
     }
 
     public function testCallbackFilters()
     {
-        $methodReflection = (new \ReflectionObject($this->eventMock))->getMethod('filtersPass');
+        $methodReflection = (new \ReflectionObject($this->jobMock))->getMethod('filtersPass');
         $methodReflection->setAccessible(true);
-        $this->assertTrue($methodReflection->invoke($this->eventMock));
+        $this->assertTrue($methodReflection->invoke($this->jobMock));
 
-        $this->eventMock->when(static function () {
+        $this->jobMock->when(static function () {
             return true;
         });
-        $this->assertTrue($methodReflection->invoke($this->eventMock));
+        $this->assertTrue($methodReflection->invoke($this->jobMock));
 
-        $this->eventMock->when(static function () {
+        $this->jobMock->when(static function () {
             return false;
         });
-        $this->assertFalse($methodReflection->invoke($this->eventMock));
+        $this->assertFalse($methodReflection->invoke($this->jobMock));
     }
 
     public function testBooleanRejects()
     {
-        $methodReflection = (new \ReflectionObject($this->eventMock))->getMethod('filtersPass');
+        $methodReflection = (new \ReflectionObject($this->jobMock))->getMethod('filtersPass');
         $methodReflection->setAccessible(true);
-        $this->assertTrue($methodReflection->invoke($this->eventMock));
+        $this->assertTrue($methodReflection->invoke($this->jobMock));
 
-        $this->eventMock->skip(false);
-        $this->assertTrue($methodReflection->invoke($this->eventMock));
+        $this->jobMock->skip(false);
+        $this->assertTrue($methodReflection->invoke($this->jobMock));
 
-        $this->eventMock->skip(true);
-        $this->assertFalse($methodReflection->invoke($this->eventMock));
+        $this->jobMock->skip(true);
+        $this->assertFalse($methodReflection->invoke($this->jobMock));
     }
 
     public function testCallbackRejects()
     {
-        $methodReflection = (new \ReflectionObject($this->eventMock))->getMethod('filtersPass');
+        $methodReflection = (new \ReflectionObject($this->jobMock))->getMethod('filtersPass');
         $methodReflection->setAccessible(true);
-        $this->assertTrue($methodReflection->invoke($this->eventMock));
+        $this->assertTrue($methodReflection->invoke($this->jobMock));
 
-        $this->eventMock->skip(static function () {
+        $this->jobMock->skip(static function () {
             return false;
         });
-        $this->assertTrue($methodReflection->invoke($this->eventMock));
+        $this->assertTrue($methodReflection->invoke($this->jobMock));
 
-        $this->eventMock->skip(static function () {
+        $this->jobMock->skip(static function () {
             return true;
         });
-        $this->assertFalse($methodReflection->invoke($this->eventMock));
+        $this->assertFalse($methodReflection->invoke($this->jobMock));
     }
 }
