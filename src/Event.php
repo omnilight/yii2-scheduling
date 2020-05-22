@@ -109,7 +109,7 @@ class Event extends AbstractEvent
      */
     protected function runCommandInForeground()
     {
-        $this->exitCode = $this->createProcess($this->buildCommand())->run();
+        $this->exitCode = $this->createProcess($this->buildCommand(), $this->cwd)->run();
         $this->callAfterCallbacks();
     }
 
@@ -119,7 +119,7 @@ class Event extends AbstractEvent
      */
     protected function runCommandInBackground()
     {
-        $this->createProcess($this->buildCommand())->run();
+        $this->createProcess($this->buildCommand(), $this->cwd)->run();
     }
 
     /**
@@ -148,7 +148,6 @@ class Event extends AbstractEvent
         if ($this->omitErrors) {
             $redirectOutput .= ' 2>&1';
         }
-        $command = $this->ensureCorrectDirectory($command);
         if (!$this->runInBackground) {
             return $this->ensureCorrectUser("{$command} {$redirectOutput}");
         }
@@ -175,23 +174,6 @@ class Event extends AbstractEvent
         return $this->ensureCorrectUser(
             "({$command} {$redirectOutput} ; {$callback}) > {$this->getDefaultOutput()} 2>&1 &"
         );
-    }
-
-    /**
-     * Finalize the command syntax with the correct directory.
-     *
-     * @param string $command
-     * @return string
-     */
-    protected function ensureCorrectDirectory($command)
-    {
-        if (!$this->cwd) {
-            return $command;
-        }
-        return $this->isWindows()
-            // support changing drives in Windows
-            ? "cd /d {$this->cwd} & {$command}"
-            : "cd {$this->cwd}; {$command}";
     }
 
     /**
@@ -239,7 +221,8 @@ class Event extends AbstractEvent
     }
 
     /**
-     * Change the current working directory.
+     * Set the initial working directory for the command.
+     * This must be an absolute directory path, or NULL if you want to use the working dir of the current PHP process
      *
      * @param $directory
      * @return $this

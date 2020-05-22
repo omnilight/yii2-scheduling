@@ -49,46 +49,6 @@ class CliEventTest extends AbstractTestCase
         $this->assertSame("sudo -u {$userName} -- sh -c '{$cmd} > {$defOutput}'", $eventMock->buildCommand());
     }
 
-    public function testBuildsCommandChangingDir()
-    {
-        $eventMock = $this->createEventMock('php -i', ['isWindows']);
-        $eventMock->expects($this->any())
-            ->method('isWindows')
-            ->willReturn(false);
-
-        $cmd = $eventMock->getCommand();
-        $defOutput = $eventMock->getDefaultOutput();
-
-        $this->assertSame("{$cmd} > {$defOutput}", $eventMock->buildCommand());
-
-        $dir = '/var/www';
-        $eventMock->in($dir);
-        $this->assertSame("cd {$dir}; {$cmd} > {$defOutput}", $eventMock->buildCommand());
-    }
-
-    /**
-     * @depends testBuildsCommandChangingUser
-     * @depends testBuildsCommandChangingDir
-     */
-    public function testBuildsCommandChangingUserAndDir()
-    {
-        $eventMock = $this->createEventMock('php -i', ['isWindows']);
-        $eventMock->expects($this->any())
-            ->method('isWindows')
-            ->willReturn(false);
-
-        $cmd = $eventMock->getCommand();
-        $defOutput = $eventMock->getDefaultOutput();
-
-        $this->assertSame("{$cmd} > {$defOutput}", $eventMock->buildCommand());
-
-        $userName = 'admin';
-        $dir = '/var/www';
-        $eventMock->user($userName);
-        $eventMock->in($dir);
-        $this->assertSame("sudo -u {$userName} -- sh -c 'cd {$dir}; {$cmd} > {$defOutput}'", $eventMock->buildCommand());
-    }
-
     public function testBuildsBackgroundCommand()
     {
         $this->mockApplicationRequestScriptFileAndControllerId('yii', 'schedule');
