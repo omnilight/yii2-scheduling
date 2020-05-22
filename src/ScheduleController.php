@@ -54,6 +54,10 @@ class ScheduleController extends Controller
         $events = $this->schedule->dueEvents();
 
         foreach ($events as $event) {
+            if (!$event->filtersPass()) {
+                continue;
+            }
+
             if ($this->omitErrors !== null) {
                 $event->omitErrors($this->omitErrors);
             }

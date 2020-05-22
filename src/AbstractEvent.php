@@ -201,7 +201,7 @@ abstract class AbstractEvent extends \yii\base\Component
      */
     public function isDue()
     {
-        return $this->expressionPasses() && $this->filtersPass();
+        return $this->expressionPasses();
     }
 
     /**
@@ -220,16 +220,15 @@ abstract class AbstractEvent extends \yii\base\Component
      *
      * @return bool
      */
-    protected function filtersPass()
+    public function filtersPass()
     {
-        foreach ($this->filters as $callback) {
-            if (!call_user_func($callback, $this)) {
+        foreach ($this->rejects as $callback) {
+            if (call_user_func($callback, $this)) {
                 return false;
             }
         }
-
-        foreach ($this->rejects as $callback) {
-            if (call_user_func($callback, $this)) {
+        foreach ($this->filters as $callback) {
+            if (!call_user_func($callback, $this)) {
                 return false;
             }
         }
