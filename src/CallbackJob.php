@@ -52,7 +52,10 @@ class CallbackJob extends AbstractJob
         if (!$this->beforeRun()) {
             return;
         }
-        $this->result = call_user_func_array($this->callback, $this->parameters);
+        try {
+            $this->result = call_user_func_array($this->callback, $this->parameters);
+        } catch (\Exception $e) {
+        }
         $this->afterComplete();
     }
 
