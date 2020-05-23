@@ -80,6 +80,18 @@ class ShellJobTest extends AbstractTestCase
         );
     }
 
+    public function testCreatesProcess()
+    {
+        $job = new ShellJob('php -i');
+        $methodReflection = (new \ReflectionObject($job))->getMethod('createProcess');
+        $methodReflection->setAccessible(true);
+
+        /** @var \Symfony\Component\Process\Process $process */
+        $process = $methodReflection->invoke($job, $job->getCommand());
+        $this->assertInstanceOf('\Symfony\Component\Process\Process', $process);
+        $this->assertSame($job->getCommand(), $process->getCommandLine());
+    }
+
     public function testTriggersBeforeRunEvent()
     {
         $jobMock = $this->createJobMock('php -i', ['createProcess']);
