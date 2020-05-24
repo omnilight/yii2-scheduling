@@ -12,6 +12,7 @@ use Yii;
  *
  * @property-read string $command
  * @property-read int|null $exitCode
+ * @property-read bool $runInBackground
  */
 class ShellJob extends AbstractJob
 {
@@ -49,7 +50,7 @@ class ShellJob extends AbstractJob
      *
      * @var bool
      */
-    public $runInBackground = false;
+    protected $runInBackground = false;
     /**
      * The exit status code of the command.
      *
@@ -241,6 +242,14 @@ class ShellJob extends AbstractJob
     {
         $this->runInBackground = $inBackground;
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getRunInBackground()
+    {
+        return $this->runInBackground;
     }
 
     /**

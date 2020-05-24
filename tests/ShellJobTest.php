@@ -155,39 +155,6 @@ class ShellJobTest extends AbstractTestCase
     }
 
     /**
-     * @depends testTriggersBeforeRunEvent
-     */
-    public function testMutexPreventsOverlapping()
-    {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|Mutex $mutexMock */
-        $mutexMock = $this->getMockForAbstractClass(Mutex::className(), [], '', true, true, true, ['acquire', 'release']);
-        $mutexMock->expects($this->exactly(2))
-            ->method('acquire')
-            ->willReturnOnConsecutiveCalls(true, false);
-
-        $jobMock = $this->createJobMock('php -i', ['createProcess']);
-        $jobMock->expects($this->any())
-            ->method('createProcess')
-            ->willReturn($this->createForegroundProcessMock(0));
-        $jobMock->setMutex($mutexMock);
-        $jobMock->withoutOverlapping();
-
-        // expect running
-        $beforeRunHandler = function (ModelEvent $e) {
-            $this->assertTrue($e->isValid);
-        };
-        $jobMock->on($jobMock::EVENT_BEFORE_RUN, $beforeRunHandler);
-        $jobMock->run();
-        $jobMock->off($jobMock::EVENT_BEFORE_RUN, $beforeRunHandler);
-
-        // expect skipping
-        $jobMock->on($jobMock::EVENT_BEFORE_RUN, function (ModelEvent $e) {
-            $this->assertFalse($e->isValid);
-        });
-        $jobMock->run();
-    }
-
-    /**
      * @param int $exitCode
      * @param string $command
      * @return \PHPUnit_Framework_MockObject_MockObject|Process
@@ -210,7 +177,6 @@ class ShellJobTest extends AbstractTestCase
     {
         return $this->getMock(ShellJob::className(), $methods, [$command]);
     }
-
 
     protected function mockApplicationRequestScriptFileAndControllerId($scriptFile, $controllerId)
     {

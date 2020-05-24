@@ -4,11 +4,13 @@ namespace lexeo\yii2scheduling;
 
 use Cron\CronExpression;
 use DateTime;
-use yii\base\InvalidConfigException;
 use yii\base\ModelEvent;
-use yii\mutex\FileMutex;
-use yii\mutex\Mutex;
 
+/**
+ * Class AbstractJob
+ * @property-read bool $withoutOverlapping
+ * @property-read bool $onOneServer
+ */
 abstract class AbstractJob extends \yii\base\Component
 {
     const EVENT_BEFORE_RUN = 'beforeRun';
@@ -39,17 +41,17 @@ abstract class AbstractJob extends \yii\base\Component
      */
     protected $description;
     /**
-     * The mutex implementation.
-     *
-     * @var Mutex|null
-     */
-    protected $mutex;
-    /**
      * Indicates if the command should not overlap itself.
      *
      * @var bool
      */
     protected $withoutOverlapping = false;
+    /**
+     * Indicates if the command should only be allowed to run on one server for each cron expression.
+     *
+     * @var bool
+     */
+    protected $onOneServer = false;
     /**
      * Decide if errors will be displayed.
      *
@@ -537,71 +539,45 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * @param Mutex|null $mutex
+     * Do not allow the job to overlap each other.
+     *
+     * @param bool $bool
      * @return $this
      */
-    public function setMutex($mutex)
+    public function withoutOverlapping($bool = true)
     {
-        if (null !== $mutex && !$mutex instanceof Mutex) {
-            throw new \InvalidArgumentException(sprintf(
-                'Instance of "%s" expected, "%s" provided.',
-                Mutex::className(),
-                is_object($mutex) ? get_class($mutex) : gettype($mutex)
-            ));
-        }
-        $this->mutex = $mutex;
+        $this->withoutOverlapping = $bool;
         return $this;
     }
 
     /**
-     * Do not allow the job to overlap each other.
-     *
-     * @return $this
+     * @return bool
      */
-    public function withoutOverlapping()
+    public function getWithoutOverlapping()
     {
-        if (!$this->withoutOverlapping) {
-            $this->ensureMutexDefined();
-
-            $this->on(self::EVENT_BEFORE_RUN, function (ModelEvent $e) {
-                if (!$this->mutex->acquire($this->mutexName())) {
-                    $e->isValid = false;
-                }
-            });
-
-            $this->then(function () {
-                $this->mutex->release($this->mutexName());
-            });
-            //TODO skip if lock exists. Unfortunately Mutex class doesn't allow to check if lock exists
-        }
-        $this->withoutOverlapping = true;
-        return $this;
+        return $this->withoutOverlapping;
     }
 
     /**
      * Allow the job to only run on one server for each cron expression.
      *
+     * @param bool $bool
      * @return $this
      */
-    public function onOneServer()
+    public function onOneServer($bool = true)
     {
-        $this->ensureMutexDefined();
-        if ($this->mutex instanceof FileMutex) {
-            throw new InvalidConfigException(
-                'You must config mutex in the application component, except the FileMutex.'
-            );
+        $this->onOneServer = $bool;
+        if ($bool) {
+            $this->getWithoutOverlapping();
         }
-
-        return $this->withoutOverlapping();
+        return $this;
     }
 
     /**
-     * @throws InvalidConfigException
+     * @return bool
      */
-    private function ensureMutexDefined()
+    public function getOnOneServer()
     {
-        if (null === $this->mutex) {
-            throw new InvalidConfigException('For preventing overlapping a Mutex component is required.');
-        }
+        return $this->onOneServer;
     }
 }

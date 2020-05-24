@@ -3,9 +3,13 @@
 namespace lexeo\yii2scheduling\tests;
 
 use DateTimeZone;
+use lexeo\yii2scheduling\AbstractJob;
 use lexeo\yii2scheduling\CallbackJob;
 use lexeo\yii2scheduling\ShellJob;
 use lexeo\yii2scheduling\Schedule;
+use yii\base\Event;
+use yii\base\ModelEvent;
+use yii\mutex\Mutex;
 
 class ScheduleTest extends AbstractTestCase
 {
@@ -97,5 +101,59 @@ class ScheduleTest extends AbstractTestCase
         $timeZone = new DateTimeZone('UTC');
         $schedule->setTimezone($timeZone);
         $this->assertSame($timeZone, $propReflection->getValue($schedule));
+    }
+
+    public function testMutexPreventsOverlapping()
+    {
+        /** @var \PHPUnit_Framework_MockObject_MockObject|Mutex $mutexMock */
+        $mutexMock = $this->getMockForAbstractClass(Mutex::className(), [], '', true, true, true, ['acquire', 'release']);
+        /** @var \PHPUnit_Framework_MockObject_MockObject|AbstractJob $jobMock */
+        $jobMock = $this->getMockForAbstractClass(AbstractJob::className());
+
+        $schedule = new Schedule([
+            'mutex' => $mutexMock,
+        ]);
+        $schedule->add($jobMock);
+
+        $mutexMock->expects($this->exactly(2))
+            ->method('acquire')
+            ->willReturnOnConsecutiveCalls(true, false);
+
+        // no need to set lock
+        $this->assertTrue($this->triggerJobBeforeRun($jobMock)->isValid);
+
+        // set lock
+        $jobMock->withoutOverlapping();
+        $this->assertTrue($this->triggerJobBeforeRun($jobMock)->isValid);
+
+        // locked
+        $this->assertFalse($this->triggerJobBeforeRun($jobMock)->isValid);
+
+        // releases mock after complete
+        $mutexMock->expects($this->once())
+            ->method('release');
+        $this->triggerJobAfterComplete($jobMock);
+    }
+
+    /**
+     * @param AbstractJob $job
+     * @return ModelEvent
+     */
+    protected function triggerJobBeforeRun(AbstractJob $job)
+    {
+        $event = new ModelEvent();
+        $job->trigger($job::EVENT_BEFORE_RUN, $event);
+        return $event;
+    }
+
+    /**
+     * @param AbstractJob $job
+     * @return Event
+     */
+    protected function triggerJobAfterComplete(AbstractJob $job)
+    {
+        $event = new Event();
+        $job->trigger($job::EVENT_AFTER_COMPLETE, $event);
+        return $event;
     }
 }

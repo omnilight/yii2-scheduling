@@ -116,5 +116,7 @@ class ScheduleController extends Controller
         call_user_func(static function () use ($schedule, $scheduleFile) {
             include $scheduleFile;
         });
+
+        //TODO validate Schedule. Ensure that everything will work fine (for example, FileMutex cannot prevent overlapping on multiple servers)
     }
 }

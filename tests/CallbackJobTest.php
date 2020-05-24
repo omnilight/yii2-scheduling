@@ -106,35 +106,4 @@ class CallbackJobTest extends AbstractTestCase
         $this->assertNotEquals($job1->mutexName(), $job3->mutexName());
         $this->assertNotEquals($job1->everyMinute()->mutexName(), $job2->daily()->mutexName());
     }
-
-    /**
-     * @depends testTriggersBeforeRunEvent
-     */
-    public function testMutexPreventsOverlapping()
-    {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|Mutex $mutexMock */
-        $mutexMock = $this->getMockForAbstractClass(Mutex::className(), [], '', true, true, true, ['acquire', 'release']);
-        $mutexMock->expects($this->exactly(2))
-            ->method('acquire')
-            ->willReturnOnConsecutiveCalls(true, false);
-
-        $job = new CallbackJob('max', [3, 5]);
-        $job->description('-test-job-');
-        $job->setMutex($mutexMock);
-        $job->withoutOverlapping();
-
-        // expect running
-        $beforeRunHandler = function (ModelEvent $e) {
-            $this->assertTrue($e->isValid);
-        };
-        $job->on($job::EVENT_BEFORE_RUN, $beforeRunHandler);
-        $job->run();
-        $job->off($job::EVENT_BEFORE_RUN, $beforeRunHandler);
-
-        // expect skipping
-        $job->on($job::EVENT_BEFORE_RUN, function (ModelEvent $e) {
-            $this->assertFalse($e->isValid);
-        });
-        $job->run();
-    }
 }

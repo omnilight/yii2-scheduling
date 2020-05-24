@@ -7,6 +7,7 @@ use DateTimeZone;
 use Yii;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
+use yii\base\ModelEvent;
 use yii\console\Application;
 use yii\di\Instance;
 use yii\mutex\FileMutex;
@@ -51,9 +52,7 @@ class Schedule extends Component
     {
         parent::__construct($config);
         if (null === $this->mutex) {
-            $this->mutex = Yii::$app->has('mutex')
-                ? Instance::ensure('mutex', Mutex::className())
-                : new FileMutex(['autoRelease' => false]);
+            $this->mutex = new FileMutex(['autoRelease' => false]);
         }
 
         $absoluteYiiPath = realpath($this->yiiCliEntryPoint);
@@ -78,9 +77,8 @@ class Schedule extends Component
     public function call($callback, array $parameters = [])
     {
         $job = new CallbackJob($callback, $parameters);
-        $job->setMutex($this->mutex);
+        $this->add($job);
 
-        $this->jobs[] = $job;
         return $job;
     }
 
@@ -104,10 +102,18 @@ class Schedule extends Component
     public function exec($command)
     {
         $job = new ShellJob($command);
-        $job->setMutex($this->mutex);
+        $this->add($job);
 
-        $this->jobs[] = $job;
         return $job;
+    }
+
+    /**
+     * @param AbstractJob $job
+     */
+    public function add(AbstractJob $job)
+    {
+        $this->attachHandlerPreventingOverlapping($job);
+        $this->jobs[] = $job;
     }
 
     /**
@@ -132,6 +138,17 @@ class Schedule extends Component
     }
 
     /**
+     * @param Mutex|string $mutex
+     * @return $this
+     * @throws InvalidConfigException
+     */
+    public function setMutex($mutex)
+    {
+        $this->mutex = Instance::ensure($mutex, Mutex::className());
+        return $this;
+    }
+
+    /**
      * Set the timezone the date should be evaluated on.
      *
      * @param DateTimeZone|string $timezone
@@ -141,5 +158,25 @@ class Schedule extends Component
     {
         $this->timezone = $timezone instanceof DateTimeZone ? $timezone : new DateTimeZone($timezone);
         return $this;
+    }
+
+    /**
+     * @param AbstractJob $job
+     * @return void
+     */
+    protected function attachHandlerPreventingOverlapping(AbstractJob $job)
+    {
+        $jobUniqId = $job->mutexName();
+        $job->on($job::EVENT_BEFORE_RUN, function(ModelEvent $e) use ($jobUniqId) {
+            /** @var AbstractJob $job */
+            $job = $e->sender;
+            if ($job->getWithoutOverlapping() && !$this->mutex->acquire($jobUniqId)) {
+                $e->isValid = false;
+            }
+        });
+        $job->then(function () use ($jobUniqId) {
+            $this->mutex->release($jobUniqId);
+        });
+        //TODO skip if lock exists. Unfortunately Mutex class doesn't allow to check if lock exists
     }
 }
