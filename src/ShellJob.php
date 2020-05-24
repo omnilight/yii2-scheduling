@@ -100,7 +100,7 @@ class ShellJob extends AbstractJob
      */
     public function getId()
     {
-        return 'framework/schedule-' . sha1($this->expression . $this->command);
+        return sha1($this->expression . $this->command);
     }
 
     /**

@@ -114,6 +114,7 @@ class ScheduleTest extends AbstractTestCase
             'mutex' => $mutexMock,
         ]);
         $schedule->add($jobMock);
+        $jobMock->daily();
 
         $mutexMock->expects($this->exactly(2))
             ->method('acquire')

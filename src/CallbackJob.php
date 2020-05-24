@@ -79,7 +79,7 @@ class CallbackJob extends AbstractJob
             ? serialize([(string) (new \ReflectionFunction($this->callback)), $this->parameters])
             : serialize([(array) $this->callback, $this->parameters]);
 
-        return 'framework/schedule-' . sha1($this->expression . $serialized);
+        return sha1($this->expression . $serialized);
     }
 
     /**

@@ -34,6 +34,11 @@ class Schedule extends Component
     protected $mutex;
 
     /**
+     * @var string
+     */
+    public $mutexKeyPrefix = 'schedule-';
+
+    /**
      * @var string The name of cli script
      */
     public $yiiCliEntryPoint = 'yii';
@@ -166,17 +171,25 @@ class Schedule extends Component
      */
     protected function attachHandlerPreventingOverlapping(AbstractJob $job)
     {
-        $jobUniqId = $job->getId();
-        $job->on($job::EVENT_BEFORE_RUN, function(ModelEvent $e) use ($jobUniqId) {
+        $job->on($job::EVENT_BEFORE_RUN, function(ModelEvent $e) {
             /** @var AbstractJob $job */
             $job = $e->sender;
-            if ($job->getWithoutOverlapping() && !$this->mutex->acquire($jobUniqId)) {
+            if ($job->getWithoutOverlapping() && !$this->mutex->acquire($this->mutexKey($job))) {
                 $e->isValid = false;
             }
         });
-        $job->then(function () use ($jobUniqId) {
-            $this->mutex->release($jobUniqId);
+        $job->then(function ($e) {
+            $this->mutex->release($this->mutexKey($e->sender));
         });
         //TODO skip if lock exists. Unfortunately Mutex class doesn't allow to check if lock exists
+    }
+
+    /**
+     * @param AbstractJob $job
+     * @return string
+     */
+    protected function mutexKey(AbstractJob $job)
+    {
+        return $this->mutexKeyPrefix . $job->getId();
     }
 }
