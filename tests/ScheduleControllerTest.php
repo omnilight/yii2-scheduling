@@ -19,7 +19,7 @@ class ScheduleControllerTest extends AbstractTestCase
                     'yiiCliEntryPoint' => '/',
                 ]),
             ],
-]       );
+        ]);
 
         $controller = new ScheduleController('schedule-controller', Yii::$app);
         $controller->verbose = false;
@@ -55,6 +55,32 @@ class ScheduleControllerTest extends AbstractTestCase
         $controller->runConcurrentShellJobsInBackground = false;
         $this->assertFalse($jobMock3->runInBackground);
         $controller->actionRun();
+    }
+
+    public function testCanDryRun()
+    {
+        $this->mockApplication();
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|ScheduleController $controllerMock */
+        $controllerMock = $this->getMock(ScheduleController::className(), ['stdout'], ['schedule-controller', Yii::$app]);
+        Yii::$app->controller = $controllerMock;
+
+        $jobMock = $this->createShellJobMock('php -i', ['run']);
+        $jobMock->expects($this->never())
+            ->method('run');
+        $controllerMock->schedule->add($jobMock);
+
+        $this->assertNotEmpty($controllerMock->schedule->dueJobs());
+        $controllerMock->verbose = true;
+        $controllerMock->dryRun = true;
+
+        $controllerMock->expects($this->once())
+            ->method('stdout')
+            ->willReturnCallback(function ($string) use ($jobMock) {
+                $this->assertStringStartsWith('Running scheduled command:', $string);
+                $this->assertContains($jobMock->getCommand(), $string);
+            });
+        $controllerMock->actionRun();
     }
 
     /**

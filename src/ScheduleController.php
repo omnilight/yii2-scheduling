@@ -26,6 +26,10 @@ class ScheduleController extends Controller
      */
     public $verbose = true;
     /**
+     * @var bool
+     */
+    public $dryRun = false;
+    /**
      * @var bool|null set to true to avoid error output.
      * Note: if not null, the specified value will be applied globally for all commands
      */
@@ -42,8 +46,8 @@ class ScheduleController extends Controller
     {
         return array_merge(
             parent::options($actionID),
-            ['verbose'],
-            'run' === $actionID ? ['scheduleFile', 'omitErrors'] : []
+            ['verbose', 'scheduleFile'],
+            in_array($actionID, ['run', 'dryRun'], true) ? ['omitErrors', 'dryRun'] : []
         );
     }
 
@@ -86,13 +90,19 @@ class ScheduleController extends Controller
             }
 
             $this->stdout('Running scheduled command: ' . $job->getSummaryForDisplay() . "\n");
-            $job->run();
+            !$this->dryRun && $job->run();
             $jobsRan = true;
         }
 
         if (false === $jobsRan) {
             $this->stdout("No scheduled commands are ready to run.\n");
         }
+    }
+
+    public function actionDryRun()
+    {
+        $this->dryRun = true;
+        $this->actionRun();
     }
 
     /**
