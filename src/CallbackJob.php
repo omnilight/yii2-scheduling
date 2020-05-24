@@ -73,7 +73,7 @@ class CallbackJob extends AbstractJob
     /**
      * @inheritDoc
      */
-    public function mutexName()
+    public function getId()
     {
         $serialized = $this->callback instanceof \Closure
             ? serialize([(string) (new \ReflectionFunction($this->callback)), $this->parameters])

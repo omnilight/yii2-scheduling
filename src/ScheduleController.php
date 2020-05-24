@@ -80,7 +80,7 @@ class ScheduleController extends Controller
     }
 
     /**
-     * @param string $id The unique Job id (mutexName)
+     * @param string $id The unique Job id
      * @param int $exitCode
      * @return void
      * @throws InvalidParamException
@@ -89,7 +89,7 @@ class ScheduleController extends Controller
     {
         $this->importScheduleFile();
         foreach ($this->schedule->getJobs() as $job) {
-            if ($job instanceof ShellJob && $id === $job->mutexName()) {
+            if ($job instanceof ShellJob && $id === $job->getId()) {
                 $job->finish($exitCode);
                 break;
             }

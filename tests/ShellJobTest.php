@@ -13,6 +13,17 @@ use yii\mutex\Mutex;
 class ShellJobTest extends AbstractTestCase
 {
 
+    public function testGeneratesCorrectId()
+    {
+        // callable string
+        $job1 = new ShellJob('php -i');
+        $job2 = new ShellJob('php -i');
+        $job3 = new ShellJob('php -m');
+        $this->assertEquals($job1->getId(), $job2->getId());
+        $this->assertNotEquals($job1->getId(), $job3->getId());
+        $this->assertNotEquals($job1->everyMinute()->getId(), $job2->daily()->getId());
+    }
+
     public function testBuildsSimpleCommand()
     {
         $cmd = 'php -i';
@@ -57,21 +68,21 @@ class ShellJobTest extends AbstractTestCase
         $this->mockApplicationRequestScriptFileAndControllerId('yii', 'schedule');
 
         $cmd = 'controller/action';
-        $mutexName = '12345';
-        $jobMock = $this->createJobMock($cmd, ['isWindows', 'mutexName']);
+        $jobId = '12345';
+        $jobMock = $this->createJobMock($cmd, ['isWindows', 'getId']);
         $jobMock->expects($this->any())
             ->method('isWindows')
             ->willReturn(false);
         $jobMock->expects($this->any())
-            ->method('mutexName')
-            ->willReturn($mutexName);
+            ->method('getId')
+            ->willReturn($jobId);
 
         $jobMock->runInBackground(true);
         $callbackCmd = strtr('{php} {yii} {controller}/finish "{id}" "{exitCode}"', [
             '{php}' => PHP_BINARY,
             '{yii}' => Yii::$app->request->scriptFile,
             '{controller}' => Yii::$app->controller->id,
-            '{id}' => $mutexName,
+            '{id}' => $jobId,
             '{exitCode}' => '$?',
         ]);
         $this->assertSame(

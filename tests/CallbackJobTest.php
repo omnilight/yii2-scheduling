@@ -79,31 +79,31 @@ class CallbackJobTest extends AbstractTestCase
         $fail && $this->fail('On afterComplete handler was not called.');
     }
 
-    public function testProvidesCorrectMutexName()
+    public function testGeneratesCorrectId()
     {
         // callable string
         $job1 = new CallbackJob('max', [1, 9]);
         $job2 = new CallbackJob('max', [1, 9]);
         $job3 = new CallbackJob('max', [1, 9, 99]);
-        $this->assertEquals($job1->mutexName(), $job2->mutexName());
-        $this->assertNotEquals($job1->mutexName(), $job3->mutexName());
-        $this->assertNotEquals($job1->everyMinute()->mutexName(), $job2->daily()->mutexName());
+        $this->assertEquals($job1->getId(), $job2->getId());
+        $this->assertNotEquals($job1->getId(), $job3->getId());
+        $this->assertNotEquals($job1->everyMinute()->getId(), $job2->daily()->getId());
 
         // callable array
         $job1 = new CallbackJob(['\PHPUnit\Framework\TestCase', 'assertTrue'], [true]);
         $job2 = new CallbackJob(['\PHPUnit\Framework\TestCase', 'assertTrue'], [true]);
         $job3 = new CallbackJob(['\PHPUnit\Framework\TestCase', 'assertTrue'], [false]);
-        $this->assertEquals($job1->mutexName(), $job2->mutexName());
-        $this->assertNotEquals($job1->mutexName(), $job3->mutexName());
-        $this->assertNotEquals($job1->everyMinute()->mutexName(), $job2->daily()->mutexName());
+        $this->assertEquals($job1->getId(), $job2->getId());
+        $this->assertNotEquals($job1->getId(), $job3->getId());
+        $this->assertNotEquals($job1->everyMinute()->getId(), $job2->daily()->getId());
 
         // callable Closure
         $closure = static function($a, $b) { return $a + $b; };
         $job1 = new CallbackJob($closure, [1, 2]);
         $job2 = new CallbackJob($closure, [1, 2]);
         $job3 = new CallbackJob($closure, [5, 7]);
-        $this->assertEquals($job1->mutexName(), $job2->mutexName());
-        $this->assertNotEquals($job1->mutexName(), $job3->mutexName());
-        $this->assertNotEquals($job1->everyMinute()->mutexName(), $job2->daily()->mutexName());
+        $this->assertEquals($job1->getId(), $job2->getId());
+        $this->assertNotEquals($job1->getId(), $job3->getId());
+        $this->assertNotEquals($job1->everyMinute()->getId(), $job2->daily()->getId());
     }
 }

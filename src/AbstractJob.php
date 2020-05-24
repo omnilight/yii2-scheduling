@@ -8,6 +8,7 @@ use yii\base\ModelEvent;
 
 /**
  * Class AbstractJob
+ * @property-read string $id
  * @property-read bool $withoutOverlapping
  * @property-read bool $onOneServer
  */
@@ -72,11 +73,11 @@ abstract class AbstractJob extends \yii\base\Component
     abstract public function getSummaryForDisplay();
 
     /**
-     * Get the mutex name for the scheduled command.
+     * Get the unique id of scheduled command.
      *
      * @return string
      */
-    abstract public function mutexName();
+    abstract public function getId();
 
     /**
      * @return bool

@@ -166,7 +166,7 @@ class Schedule extends Component
      */
     protected function attachHandlerPreventingOverlapping(AbstractJob $job)
     {
-        $jobUniqId = $job->mutexName();
+        $jobUniqId = $job->getId();
         $job->on($job::EVENT_BEFORE_RUN, function(ModelEvent $e) use ($jobUniqId) {
             /** @var AbstractJob $job */
             $job = $e->sender;

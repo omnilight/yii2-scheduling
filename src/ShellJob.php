@@ -98,7 +98,7 @@ class ShellJob extends AbstractJob
     /**
      * @inheritDoc
      */
-    public function mutexName()
+    public function getId()
     {
         return 'framework/schedule-' . sha1($this->expression . $this->command);
     }
@@ -159,7 +159,7 @@ class ShellJob extends AbstractJob
         if ($this->isWindows()) {
             $callback = strtr('{cmd} "{id}" "{exitCode}"', [
                 '{cmd}' => $callbackCmd,
-                '{id}' => $this->mutexName(),
+                '{id}' => $this->getId(),
                 '{exitCode}' => '%errorlevel%',
             ]);
             return "start /b cmd /c \"({$command} & {$callback}) {$redirectOutput}\"";
@@ -167,7 +167,7 @@ class ShellJob extends AbstractJob
 
         $callback = strtr('{cmd} "{id}" "{exitCode}"', [
             '{cmd}' => $callbackCmd,
-            '{id}' => $this->mutexName(),
+            '{id}' => $this->getId(),
             '{exitCode}' => '$?',
         ]);
         return $this->ensureCorrectUser(
