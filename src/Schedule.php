@@ -2,6 +2,8 @@
 
 namespace lexeo\yii2scheduling;
 
+use DateTime;
+use DateTimeZone;
 use Yii;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
@@ -34,6 +36,11 @@ class Schedule extends Component
      * @var string The name of cli script
      */
     public $yiiCliEntryPoint = 'yii';
+
+    /**
+     * @var
+     */
+    protected $timezone;
 
     /**
      * Schedule constructor.
@@ -118,8 +125,21 @@ class Schedule extends Component
      */
     public function dueJobs()
     {
-        return array_filter($this->jobs, static function (AbstractJob $job) {
-            return $job->isDue();
+        $currentTime = new DateTime('now', $this->timezone);
+        return array_filter($this->jobs, static function (AbstractJob $job) use ($currentTime) {
+            return $job->isDue($currentTime);
         });
+    }
+
+    /**
+     * Set the timezone the date should be evaluated on.
+     *
+     * @param DateTimeZone|string $timezone
+     * @return $this
+     */
+    public function setTimezone($timezone)
+    {
+        $this->timezone = $timezone instanceof DateTimeZone ? $timezone : new DateTimeZone($timezone);
+        return $this;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace lexeo\yii2scheduling\tests;
 
+use DateTimeZone;
 use lexeo\yii2scheduling\CallbackJob;
 use lexeo\yii2scheduling\ShellJob;
 use lexeo\yii2scheduling\Schedule;
@@ -78,5 +79,23 @@ class ScheduleTest extends AbstractTestCase
                 ],
             ],
         ], \yii\web\Application::className());
+    }
+
+    public function testSetTimezoneAcceptsBothStringAndDateTimeZone()
+    {
+        $schedule = new Schedule();
+        $propReflection = (new \ReflectionClass($schedule))->getProperty('timezone');
+        $propReflection->setAccessible(true);
+
+        $this->assertNull($propReflection->getValue($schedule));
+
+        $expectedTzString = 'Europe/Moscow';
+        $schedule->setTimezone($expectedTzString);
+        $this->assertInstanceOf('DateTimeZone', $propReflection->getValue($schedule));
+        $this->assertEquals($expectedTzString, $propReflection->getValue($schedule)->getName());
+
+        $timeZone = new DateTimeZone('UTC');
+        $schedule->setTimezone($timeZone);
+        $this->assertSame($timeZone, $propReflection->getValue($schedule));
     }
 }

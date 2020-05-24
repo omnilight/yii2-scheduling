@@ -2,7 +2,6 @@
 
 namespace lexeo\yii2scheduling\tests;
 
-use DateTimeZone;
 use lexeo\yii2scheduling\AbstractJob;
 
 class JobTest extends AbstractTestCase
@@ -19,23 +18,6 @@ class JobTest extends AbstractTestCase
     {
         parent::setUp();
         $this->jobMock = $this->getMockForAbstractClass(AbstractJob::className());
-    }
-
-    public function testTimezoneAcceptsBothStringAndDateTimeZone()
-    {
-        $propReflection = (new \ReflectionClass($this->jobMock))->getProperty('timezone');
-        $propReflection->setAccessible(true);
-
-        $this->assertNull($propReflection->getValue($this->jobMock));
-
-        $expectedTzString = 'Europe/Moscow';
-        $this->jobMock->timezone($expectedTzString);
-        $this->assertInstanceOf('DateTimeZone', $propReflection->getValue($this->jobMock));
-        $this->assertEquals($expectedTzString, $propReflection->getValue($this->jobMock)->getName());
-
-        $timeZone = new DateTimeZone('UTC');
-        $this->jobMock->timezone($timeZone);
-        $this->assertSame($timeZone, $propReflection->getValue($this->jobMock));
     }
 
     public function testBooleanFilters()

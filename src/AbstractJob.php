@@ -4,7 +4,6 @@ namespace lexeo\yii2scheduling;
 
 use Cron\CronExpression;
 use DateTime;
-use DateTimeZone;
 use yii\base\InvalidConfigException;
 use yii\base\ModelEvent;
 use yii\mutex\FileMutex;
@@ -21,12 +20,6 @@ abstract class AbstractJob extends \yii\base\Component
      * @var string
      */
     protected $expression = '* * * * *';
-    /**
-     * The timezone the date should be evaluated on.
-     *
-     * @var DateTimeZone|null
-     */
-    protected $timezone;
     /**
      * The filter callback.
      *
@@ -168,18 +161,6 @@ abstract class AbstractJob extends \yii\base\Component
     }
 
     /**
-     * Set the timezone the date should be evaluated on.
-     *
-     * @param DateTimeZone|string $timezone
-     * @return $this
-     */
-    public function timezone($timezone)
-    {
-        $this->timezone = $timezone instanceof DateTimeZone ? $timezone : new DateTimeZone($timezone);
-        return $this;
-    }
-
-    /**
      * Set if errors should be displayed
      *
      * @param bool $omitErrors
@@ -194,22 +175,12 @@ abstract class AbstractJob extends \yii\base\Component
     /**
      * Determine if the given job should run based on the Cron expression.
      *
+     * @param DateTime|string $currentTime
      * @return bool
      */
-    public function isDue()
+    public function isDue($currentTime)
     {
-        return $this->expressionPasses();
-    }
-
-    /**
-     * Determine if the Cron expression passes.
-     *
-     * @return bool
-     */
-    protected function expressionPasses()
-    {
-        $date = new DateTime('now', $this->timezone);
-        return CronExpression::factory($this->expression)->isDue($date);
+        return CronExpression::factory($this->expression)->isDue($currentTime);
     }
 
     /**
