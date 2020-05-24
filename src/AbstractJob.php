@@ -5,7 +5,6 @@ namespace lexeo\yii2scheduling;
 use Cron\CronExpression;
 use DateTime;
 use DateTimeZone;
-use GuzzleHttp\Client as HttpClient;
 use yii\base\InvalidConfigException;
 use yii\base\ModelEvent;
 use yii\mutex\FileMutex;
@@ -144,19 +143,6 @@ abstract class AbstractJob extends \yii\base\Component
     {
         $this->on(self::EVENT_AFTER_COMPLETE, $callback, $data);
         return $this;
-    }
-
-    /**
-     * Register a callback to the ping a given URL after the job runs.
-     *
-     * @param string $url
-     * @return $this
-     */
-    public function thenPing($url)
-    {
-        return $this->then(static function () use ($url) {
-            (new HttpClient)->get($url);
-        });
     }
 
     /**
