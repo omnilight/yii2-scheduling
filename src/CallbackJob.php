@@ -5,6 +5,10 @@ namespace lexeo\yii2scheduling;
 use InvalidArgumentException;
 use yii\base\InvalidConfigException;
 
+/**
+ * Class CallbackJob
+ * @property-read mixed $result
+ */
 class CallbackJob extends AbstractJob
 {
     /**
@@ -24,7 +28,7 @@ class CallbackJob extends AbstractJob
      *
      * @var mixed
      */
-    public $result;
+    protected $result;
 
     /**
      * Create a new job instance.
@@ -57,6 +61,14 @@ class CallbackJob extends AbstractJob
         } catch (\Exception $e) {
         }
         $this->afterComplete();
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getResult()
+    {
+        return $this->result;
     }
 
     /**

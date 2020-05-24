@@ -28,12 +28,12 @@ class CallbackJobTest extends AbstractTestCase
 
         $job->run();
         $fail && $this->fail('Callback was not called.');
-        $this->assertSame($job->result, $expectedResult);
+        $this->assertSame($job->getResult(), $expectedResult);
 
         // from string
         $job = new CallbackJob('max', [1, 9]);
         $job->run();
-        $this->assertSame(9, $job->result);
+        $this->assertSame(9, $job->getResult());
     }
 
     /**
@@ -45,7 +45,7 @@ class CallbackJobTest extends AbstractTestCase
             throw new \LogicException('Fail!');
         });
         $job->run();
-        $this->assertNull($job->result);
+        $this->assertNull($job->getResult());
     }
 
     public function testTriggersBeforeRunEvent()
