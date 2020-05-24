@@ -22,7 +22,7 @@
     "dragonmantank/cron-expression": "1.*"
   },
   "require-dev": {
-    "phpunit/phpunit": "4.8.36"
+    "phpunit/phpunit": "4.8.36 || 5.*"
   },
   "suggest": {
     "guzzlehttp/guzzle": "Required to use the thenPing method on schedules (~5.0)."
