@@ -72,16 +72,14 @@ class CallbackJob extends AbstractJob
 
     /**
      * @inheritDoc
-     * @throws InvalidConfigException
      */
     public function mutexName()
     {
-        if (!$this->description) {
-            throw new InvalidConfigException(
-                "A scheduled job name is required to prevent overlapping. Use the 'description' method before 'withoutOverlapping'."
-            );
-        }
-        return 'framework/schedule-' . sha1($this->description);
+        $serialized = $this->callback instanceof \Closure
+            ? serialize([(string) (new \ReflectionFunction($this->callback)), $this->parameters])
+            : serialize([(array) $this->callback, $this->parameters]);
+
+        return 'framework/schedule-' . sha1($this->expression . $serialized);
     }
 
     /**
