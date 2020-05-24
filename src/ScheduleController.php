@@ -22,10 +22,18 @@ class ScheduleController extends Controller
      */
     public $scheduleFile;
     /**
+     * @var bool
+     */
+    public $verbose = true;
+    /**
      * @var bool|null set to true to avoid error output.
      * Note: if not null, the specified value will be applied globally for all commands
      */
     public $omitErrors;
+    /**
+     * @var bool Whether to force running in background concurrent Shell jobs. Defaults to false
+     */
+    public $runConcurrentShellJobsInBackground = false;
 
     /**
      * @inheritDoc
@@ -34,6 +42,7 @@ class ScheduleController extends Controller
     {
         return array_merge(
             parent::options($actionID),
+            ['verbose'],
             'run' === $actionID ? ['scheduleFile', 'omitErrors'] : []
         );
     }
@@ -61,14 +70,21 @@ class ScheduleController extends Controller
     {
         $this->importScheduleFile();
 
+        $jobs = $this->schedule->dueJobs();
+        $forceRunInBackground = $this->runConcurrentShellJobsInBackground && $this->concurrentShellJobsExist($jobs);
+
         $jobsRan = false;
-        foreach ($this->schedule->dueJobs() as $job) {
+        foreach ($jobs as $job) {
             if (!$job->filtersPass()) {
                 continue;
             }
             if ($this->omitErrors !== null) {
                 $job->omitErrors($this->omitErrors);
             }
+            if ($forceRunInBackground && $job instanceof ShellJob) {
+                $job->runInBackground();
+            }
+
             $this->stdout('Running scheduled command: ' . $job->getSummaryForDisplay() . "\n");
             $job->run();
             $jobsRan = true;
@@ -118,5 +134,31 @@ class ScheduleController extends Controller
         });
 
         //TODO validate Schedule. Ensure that everything will work fine (for example, FileMutex cannot prevent overlapping on multiple servers)
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function stdout($string)
+    {
+        if (!$this->verbose) {
+            return 0;
+        }
+        return parent::stdout($string);
+    }
+
+    /**
+     * @param AbstractJob[] $jobs
+     * @return bool
+     */
+    protected function concurrentShellJobsExist($jobs)
+    {
+        $found = 0;
+        foreach ($jobs as $job) {
+            if (($job instanceof ShellJob) && ++$found > 1) {
+                return true;
+            }
+        }
+        return false;
     }
 }
