@@ -61,12 +61,11 @@ class ShellJob extends AbstractJob
      * Create a new job instance.
      *
      * @param string $command
-     * @param array $config
      */
-    public function __construct($command, $config = [])
+    public function __construct($command)
     {
         $this->command = $command;
-        parent::__construct($config);
+        parent::__construct();
     }
 
     /**

@@ -35,17 +35,16 @@ class CallbackJob extends AbstractJob
      *
      * @param callable $callback
      * @param array $parameters
-     * @param array $config
      * @throws InvalidArgumentException
      */
-    public function __construct($callback, array $parameters = [], $config = [])
+    public function __construct($callback, array $parameters = [])
     {
         if (!is_callable($callback)) {
             throw new InvalidArgumentException('Invalid scheduled callback job. Must be callable.');
         }
         $this->callback = $callback;
         $this->parameters = $parameters;
-        parent::__construct($config);
+        parent::__construct();
     }
 
     /**
