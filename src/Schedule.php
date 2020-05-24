@@ -6,6 +6,7 @@ use Yii;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\console\Application;
+use yii\di\Instance;
 use yii\mutex\FileMutex;
 use yii\mutex\Mutex;
 
@@ -41,8 +42,12 @@ class Schedule extends Component
      */
     public function __construct(array $config = [])
     {
-        $this->mutex = Yii::$app->has('mutex') ? Yii::$app->get('mutex') : new FileMutex();
         parent::__construct($config);
+        if (null === $this->mutex) {
+            $this->mutex = Yii::$app->has('mutex')
+                ? Instance::ensure('mutex', Mutex::className())
+                : new FileMutex(['autoRelease' => false]);
+        }
 
         $absoluteYiiPath = realpath($this->yiiCliEntryPoint);
         if (false === $absoluteYiiPath) {
