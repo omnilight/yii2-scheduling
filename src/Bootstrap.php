@@ -1,10 +1,9 @@
 <?php
 
-namespace omnilight\scheduling;
+namespace lexeo\yii2scheduling;
+
 use yii\base\BootstrapInterface;
 use yii\base\Application;
-use yii\di\Instance;
-
 
 /**
  * Class Bootstrap
@@ -20,7 +19,7 @@ class Bootstrap implements BootstrapInterface
     {
         if ($app instanceof \yii\console\Application) {
             if (!isset($app->controllerMap['schedule'])) {
-                $app->controllerMap['schedule'] = 'omnilight\scheduling\ScheduleController';
+                $app->controllerMap['schedule'] = ScheduleController::className();
             }
         }
     }

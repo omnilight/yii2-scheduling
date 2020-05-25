@@ -1,7 +1,9 @@
-Schedule extension for Yii2
-===========================
+Job scheduling extension for Yii2
+=================================
 
-This extension is the port of Laravel's Schedule component (https://laravel.com/docs/master/scheduling#scheduling-artisan-commands)
+This extension inspired by Laravel's [Console\Scheduling](https://laravel.com/docs/master/scheduling) component
+and based on the [omnilight/yii2-scheduling](https://github.com/omnilight/yii2-scheduling)
+but intended to fix a number of found bugs in the last and provide a really working solution.
 
 Installation
 ------------
@@ -11,13 +13,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require omnilight/yii2-scheduling "*"
+php composer.phar require lexeo/yii2-scheduling "*"
 ```
 
 or add
 
 ```json
-"omnilight/yii2-scheduling": "*"
+"lexeo/yii2-scheduling": "*"
 ```
 
 to the `require` section of your composer.json.
@@ -25,7 +27,7 @@ to the `require` section of your composer.json.
 Description
 -----------
 
-This project is inspired by the Laravel's Schedule component and tries to bring it's simplicity to the Yii framework.
+This project inspired by the Laravel's Scheduling component and tries to bring its simplicity to the Yii framework.
 Quote from Laravel's documentation:
 
 ```
@@ -46,15 +48,13 @@ application
 Schedule examples
 -----------------
 
-This extension is support all features of Laravel's Schedule, except environments and maintance mode.
+This extension supports most of the features of Laravel's Scheduling, except environments and maintenance mode.
 
 **Scheduling Closures**
 
 ```php
-$schedule->call(function()
-{
+$schedule->call(function() {
     // Do some task...
-
 })->hourly();
 ```
 
@@ -134,8 +134,7 @@ $schedule->command('foo')->sundays();
 **Only Allow Job To Run When Callback Is True**
 
 ```php
-$schedule->command('foo')->monthly()->when(function()
-{
+$schedule->command('foo')->monthly()->when(function() {
     return true;
 });
 ```
@@ -151,7 +150,7 @@ $schedule->command('foo')->sendOutputTo($filePath)->emailOutputTo('foo@example.c
 ```php
 $schedule->command('foo')->withoutOverlapping();
 ```
-Used by default yii\mutex\FileMutex or 'mutex' application component (http://www.yiiframework.com/doc-2.0/yii-mutex-mutex.html)
+Used by default [yii\mutex\FileMutex](https://www.yiiframework.com/doc/api/2.0/yii-mutex-filemutex) or 'mutex' application component if defined.
 
 **Running Tasks On One Server**
 
@@ -182,13 +181,13 @@ $schedule->command('report:generate')
 How to use this extension in your application?
 ----------------------------------------------
 
-You should create the following file under `@console/config/schedule.php` (note: you can create file with any name
-and extension and anywere on your server, simpli ajust the name of the scheduleFile in the command below):
+You should create the following file under `@console/config/schedule.php` (note: you can create a file with any name
+and extension and anywhere on your server, simply adjust the name of the scheduleFile in the command below):
 
 ```php
 <?php
 /**
- * @var \omnilight\scheduling\Schedule $schedule
+ * @var \lexeo\yii2scheduling\Schedule $schedule
  */
 
 // Place here all of your cron jobs
@@ -200,33 +199,33 @@ $schedule->exec('ls')->everyFiveMinutes();
 $schedule->command('migrate')->hourly();
 
 // This command will call callback function every day at 10:00
-$schedule->call(function(\yii\console\Application $app) {
+$schedule->call(function() {
     // Some code here...
 })->dailyAt('10:00');
 
 ```
 
-Next your should add the following command to your crontab:
+Next you should add the following command to your crontab:
 ```
 * * * * * php /path/to/yii yii schedule/run --scheduleFile=@console/config/schedule.php 1>> /dev/null 2>&1
 ```
 
-That's all! Now all your cronjobs will be runned as configured in your schedule.php file.
+That's all! Now all your cron jobs will be run as configured in your schedule.php file.
 
 How to use this extension in your own extension?
 ------------------------------------------------
 
-First of all, you should include dependency to the `omnilight\yii2-scheduling` into your composer.json:
+First of all, you should include dependency to the `lexeo\yii2-scheduling` into your composer.json:
 
 ```
 ...
 'require': {
-    "omnilight/yii2-schedule": "*"
+    "lexeo/yii2-schedule": "*"
 }
 ...
 ```
 
-Next you should create bootstrapping class for your extension, as described in the http://www.yiiframework.com/doc-2.0/guide-structure-extensions.html#bootstrapping-classes
+Next you should create bootstrapping class for your extension, [as described in the documentation](http://www.yiiframework.com/doc-2.0/guide-structure-extensions.html#bootstrapping-classes)
 
 Place into your bootstrapping method the following code:
 
@@ -235,9 +234,9 @@ public function bootstrap(Application $app)
 {
     if ($app instanceof \yii\console\Application) {
         if ($app->has('schedule')) {
-            /** @var omnilight\scheduling\Schedule $schedule */
+            /** @var lexeo\yii2scheduling\Schedule $schedule */
             $schedule = $app->get('schedule');
-            // Place all your shedule command below
+            // Place all your schedule command below
             $schedule->command('my-extension-command')->dailyAt('12:00');
         }
     }
@@ -250,22 +249,15 @@ and add `schedule/run` command to the crontab as described upper.
 Using `schedule` component
 --------------------------
 
-You do not have to use `schedule` component directly or define it in your application if you use schedule only in your application (and do not want to give ability for extensions to register they own cron jobs). But if you what to give extensions ability to register cronjobs, you should define `schedule` component in the application config:
+You do not have to use `schedule` component directly or define it in your application if you use schedule only in your application (and do not want to give ability for extensions to register they own cron jobs). 
+But if you what to give extensions ability to register cron jobs, you should define `schedule` component in the application config:
 
 ```php
-'schedule' => 'omnilight\scheduling\Schedule',
-```
-
-Using addition functions
-------------------------
-
-If you want to use `thenPing` method of the Event, you should add the following string to the `composer.json` of your app:
-```
-"guzzlehttp/guzzle": "~5.0"
+'schedule' => 'lexeo\yii2scheduling\Schedule',
 ```
 
 Note about timezones
 --------------------
 
-Please note, that this is PHP extension, so it use timezone defined in php config or in your Yii's configuration file,
+Please note, that this is PHP extension, so it uses the timezone defined in php config or in your Yii's configuration file,
 so set them correctly.
