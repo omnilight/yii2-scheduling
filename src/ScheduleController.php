@@ -35,9 +35,9 @@ class ScheduleController extends Controller
     public function init()
     {
         if (\Yii::$app->has($this->schedule)) {
-            $this->schedule = Instance::ensure($this->schedule, Schedule::className());
+            $this->schedule = Instance::ensure($this->schedule, Schedule::class);
         } else {
-            $this->schedule = \Yii::createObject(Schedule::className());
+            $this->schedule = \Yii::createObject(Schedule::class);
         }
         parent::init();
     }
@@ -55,8 +55,7 @@ class ScheduleController extends Controller
             $event->run(\Yii::$app);
         }
 
-        if (count($events) === 0)
-        {
+        if (count($events) === 0) {
             $this->stdout("No scheduled commands are ready to run.\n");
         }
     }
