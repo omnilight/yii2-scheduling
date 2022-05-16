@@ -17,7 +17,7 @@
   "require": {
     "php": ">=5.4.0",
     "yiisoft/yii2": "2.0.*",
-    "symfony/process": "2.6.* || 3.* || 4.* || ^5.0",
+    "symfony/process": "2.6.* || 3.* || 4.*",
     "dragonmantank/cron-expression": "1.*"
   },
   "require-dev": {
@@ -36,5 +36,10 @@
   },
   "scripts": {
     "test": "vendor/bin/phpunit"
+  },
+  "config": {
+    "allow-plugins": {
+      "yiisoft/yii2-composer": true
+    }
   }
 }
