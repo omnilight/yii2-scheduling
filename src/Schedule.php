@@ -1,11 +1,17 @@
 <?php
 
-namespace omnilight\scheduling;
+namespace lexeo\yii2scheduling;
 
+use DateTime;
+use DateTimeZone;
 use Yii;
 use yii\base\Component;
-use yii\base\Application;
+use yii\base\InvalidConfigException;
+use yii\base\ModelEvent;
+use yii\console\Application;
+use yii\di\Instance;
 use yii\mutex\FileMutex;
+use yii\mutex\Mutex;
 
 
 /**
@@ -14,86 +20,176 @@ use yii\mutex\FileMutex;
 class Schedule extends Component
 {
     /**
-     * All of the events on the schedule.
+     * All of the jobs on the schedule.
      *
-     * @var Event[]
+     * @var AbstractJob[]
      */
-    protected $_events = [];
+    protected $jobs = [];
 
     /**
      * The mutex implementation.
      *
-     * @var \yii\mutex\Mutex
+     * @var Mutex|null
      */
-    protected $_mutex;
+    protected $mutex;
+
+    /**
+     * @var string
+     */
+    public $mutexKeyPrefix = 'schedule-';
 
     /**
      * @var string The name of cli script
      */
-    public $cliScriptName = 'yii';
+    public $yiiCliEntryPoint = 'yii';
+
+    /**
+     * @var
+     */
+    protected $timezone;
 
     /**
      * Schedule constructor.
      * @param array $config
+     * @throws InvalidConfigException
      */
     public function __construct(array $config = [])
     {
-        $this->_mutex = Yii::$app->has('mutex') ? Yii::$app->get('mutex') : (new FileMutex());
-
         parent::__construct($config);
+        if (null === $this->mutex) {
+            $this->mutex = new FileMutex(['autoRelease' => false]);
+        }
+
+        $absoluteYiiPath = realpath($this->yiiCliEntryPoint);
+        if (false === $absoluteYiiPath) {
+            if (!Yii::$app instanceof Application) {
+                throw new InvalidConfigException(
+                    'Unable to locate Yii CLI entry point. Use "yiiCliEntryPoint" to provide a valid path.'
+                 );
+            }
+            $absoluteYiiPath = Yii::$app->request->scriptFile;
+        }
+        $this->yiiCliEntryPoint = $absoluteYiiPath;
     }
 
     /**
-     * Add a new callback event to the schedule.
+     * Add a new callback job to the schedule.
      *
-     * @param  string  $callback
-     * @param  array   $parameters
-     * @return Event
+     * @param string $callback
+     * @param array $parameters
+     * @return CallbackJob
      */
-    public function call($callback, array $parameters = array())
+    public function call($callback, array $parameters = [])
     {
-        $this->_events[] = $event = new CallbackEvent($this->_mutex, $callback, $parameters);
-        return $event;
+        $job = new CallbackJob($callback, $parameters);
+        $this->add($job);
+
+        return $job;
     }
+
     /**
-     * Add a new cli command event to the schedule.
+     * Add a new cli command job to the schedule.
      *
-     * @param  string  $command
-     * @return Event
+     * @param string $command
+     * @return ShellJob
      */
     public function command($command)
     {
-        return $this->exec(PHP_BINARY . ' ' . $this->cliScriptName . ' ' . $command);
+        return $this->exec(PHP_BINARY . ' ' . $this->yiiCliEntryPoint . ' ' . $command);
     }
 
     /**
-     * Add a new command event to the schedule.
+     * Add a new command job to the schedule.
      *
-     * @param  string  $command
-     * @return Event
+     * @param string $command
+     * @return ShellJob
      */
     public function exec($command)
     {
-        $this->_events[] = $event = new Event($this->_mutex, $command);
-        return $event;
-    }
+        $job = new ShellJob($command);
+        $this->add($job);
 
-    public function getEvents()
-    {
-        return $this->_events;
+        return $job;
     }
 
     /**
-     * Get all of the events on the schedule that are due.
-     *
-     * @param \yii\base\Application $app
-     * @return Event[]
+     * @param AbstractJob $job
      */
-    public function dueEvents(Application $app)
+    public function add(AbstractJob $job)
     {
-        return array_filter($this->_events, function(Event $event) use ($app)
-        {
-            return $event->isDue($app);
+        $this->attachHandlerPreventingOverlapping($job);
+        $this->jobs[] = $job;
+    }
+
+    /**
+     * @return AbstractJob[]
+     */
+    public function getJobs()
+    {
+        return $this->jobs;
+    }
+
+    /**
+     * Get all of the jobs on the schedule that are due.
+     *
+     * @return AbstractJob[]
+     */
+    public function dueJobs()
+    {
+        $currentTime = new DateTime('now', $this->timezone);
+        return array_filter($this->jobs, static function (AbstractJob $job) use ($currentTime) {
+            return $job->isDue($currentTime);
         });
+    }
+
+    /**
+     * @param Mutex|string $mutex
+     * @return $this
+     * @throws InvalidConfigException
+     */
+    public function setMutex($mutex)
+    {
+        $this->mutex = Instance::ensure($mutex, Mutex::className());
+        return $this;
+    }
+
+    /**
+     * Set the timezone the date should be evaluated on.
+     *
+     * @param DateTimeZone|string $timezone
+     * @return $this
+     */
+    public function setTimezone($timezone)
+    {
+        $this->timezone = $timezone instanceof DateTimeZone ? $timezone : new DateTimeZone($timezone);
+        return $this;
+    }
+
+    /**
+     * @param AbstractJob $job
+     * @return void
+     */
+    protected function attachHandlerPreventingOverlapping(AbstractJob $job)
+    {
+        $job->on($job::EVENT_BEFORE_RUN, function(ModelEvent $e) {
+            /** @var AbstractJob $job */
+            $job = $e->sender;
+            if ($job->getWithoutOverlapping() && !$this->mutex->acquire($this->mutexKey($job))) {
+                $e->isValid = false;
+            }
+        });
+        $job->then(function ($e) {
+            $this->mutex->release($this->mutexKey($e->sender));
+        });
+        //TODO skip if lock exists. Unfortunately Mutex class doesn't allow to check if lock exists
+    }
+
+    /**
+     * @param AbstractJob $job
+     * @return string
+     */
+    protected function mutexKey(AbstractJob $job)
+    {
+        return $this->mutexKeyPrefix . $job->getId();
     }
 }

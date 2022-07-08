@@ -1,5 +1,5 @@
 {
-  "name": "omnilight/yii2-scheduling",
+  "name": "lexeo/yii2-scheduling",
   "description": "Scheduling extension for Yii2 framework",
   "keywords": [
     "yii",
@@ -7,10 +7,11 @@
     "cron"
   ],
   "minimum-stability": "dev",
+  "prefer-stable": true,
   "authors": [
     {
-      "name": "Pavel Agalecky",
-      "email": "pavel.agalecky@gmail.com"
+      "name": "Aleksei Grishatkin",
+      "email": "lexeodev@gmail.com"
     }
   ],
   "type": "yii2-extension",
@@ -21,18 +22,20 @@
     "dragonmantank/cron-expression": "1.*"
   },
   "require-dev": {
-    "phpunit/phpunit": "4.8.36"
-  },
-  "suggest": {
-    "guzzlehttp/guzzle": "Required to use the thenPing method on schedules (~5.0)."
+    "phpunit/phpunit": "4.8.36 || 5.*"
   },
   "autoload": {
     "psr-4": {
-      "omnilight\\scheduling\\": "src"
+      "lexeo\\yii2scheduling\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "lexeo\\yii2scheduling\\tests\\": "tests/"
     }
   },
   "extra": {
-    "bootstrap": "omnilight\\scheduling\\Bootstrap"
+    "bootstrap": "lexeo\\yii2scheduling\\Bootstrap"
   },
   "scripts": {
     "test": "vendor/bin/phpunit"
