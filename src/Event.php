@@ -177,7 +177,7 @@ class Event extends Component
     }
 
     /**
-     * Run the command in the background using.
+     * Run the command in the background using exec.
      *
      * @param Application $app
      */
