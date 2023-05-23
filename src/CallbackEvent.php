@@ -69,10 +69,11 @@ class CallbackEvent extends Event
     /**
      * Do not allow the event to overlap each other.
      *
+     * @param  int  $expiresAt
      * @return $this
      * @throws InvalidParamException
      */
-    public function withoutOverlapping()
+    public function withoutOverlapping($expiresAt = 1440)
     {
         if (empty($this->_description)) {
             throw new InvalidParamException(
@@ -80,7 +81,7 @@ class CallbackEvent extends Event
             );
         }
 
-        return parent::withoutOverlapping();
+        return parent::withoutOverlapping($expiresAt);
     }
 
     /**
