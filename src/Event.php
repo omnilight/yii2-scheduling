@@ -11,7 +11,7 @@ use yii\base\InvalidCallException;
 use yii\base\InvalidConfigException;
 use yii\mail\MailerInterface;
 use yii\mutex\Mutex;
-use yii\mutex\FileMutex;
+use yii\redis\Mutex as RedisMutex;
 
 /**
  * Class Event
@@ -533,10 +533,14 @@ class Event extends Component
     /**
      * Do not allow the event to overlap each other.
      *
+     * @param  int  $expiresAt
      * @return $this
      */
-    public function withoutOverlapping()
+    public function withoutOverlapping($expiresAt = 1440)
     {
+        if ($this->_mutex instanceof RedisMutex) {
+            $this->_mutex->expire = $expiresAt * 60;
+        }
         return $this->then(function() {
             $this->_mutex->release($this->mutexName());
         })->skip(function() {
@@ -551,11 +555,15 @@ class Event extends Component
      */
     public function onOneServer()
     {
-        if ($this->_mutex instanceof FileMutex) {
-            throw new InvalidConfigException('You must config mutex in the application component, except the FileMutex.');
+        if (!$this->_mutex instanceof RedisMutex) {
+            throw new InvalidConfigException('You must config redis mutex in the application component.');
         }
-
-        return $this->withoutOverlapping();
+        $time = new \DateTime('now');
+        $name = $this->mutexName() . $time->format('Hi');
+        $this->_mutex->expire = 3600;
+        return $this->skip(function() use ($name) {
+            return !$this->_mutex->acquire($name);
+        });
     }
 
     /**
