@@ -10,8 +10,8 @@ class EventTest extends \PHPUnit_Framework_TestCase
     public function buildCommandData()
     {
         return [
-            [false, 'php -i', '/dev/null', 'php -i > /dev/null'],
-            [false, 'php -i', '/my folder/foo.log', 'php -i > /my folder/foo.log'],
+            [false, 'php -i', '/dev/null', 'php -i > /dev/null &'],
+            [false, 'php -i', '/my folder/foo.log', 'php -i > /my folder/foo.log &'],
             [true, 'php -i', '/dev/null', 'php -i > /dev/null 2>&1 &'],
             [true, 'php -i', '/my folder/foo.log', 'php -i > /my folder/foo.log 2>&1 &'],
         ];

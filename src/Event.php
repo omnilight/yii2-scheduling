@@ -143,7 +143,7 @@ class Event extends Component
     {
         $command = trim($this->buildCommand(), '& ');
         $cwd = dirname($app->request->getScriptFile());
-        if (method_exists(Process::class, 'fromShellCommandline')) {
+        if (method_exists('Symfony\Component\Process\Process', 'fromShellCommandline')) {
             $process = Process::fromShellCommandline($command, $cwd, null, null, null);
         }
         else {
