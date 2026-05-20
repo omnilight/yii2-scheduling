@@ -31,7 +31,7 @@ class Event extends Component
      *
      * @var string
      */
-    protected $_expression = '* * * * * *';
+    protected $_expression = '* * * * *';
     /**
      * The timezone the date should be evaluated on.
      *
@@ -143,12 +143,7 @@ class Event extends Component
     {
         $command = trim($this->buildCommand(), '& ');
         $cwd = dirname($app->request->getScriptFile());
-        if (method_exists('Symfony\Component\Process\Process', 'fromShellCommandline')) {
-            $process = Process::fromShellCommandline($command, $cwd, null, null, null);
-        }
-        else {
-            $process = (new Process($command, $cwd, null, null, null));
-        }
+        $process = Process::fromShellCommandline($command, $cwd, null, null, null);
         $process->run();
         $this->callAfterCallbacks($app);
     }
@@ -207,9 +202,9 @@ class Event extends Component
     {
         $date = new \DateTime('now');
         if ($this->_timezone) {
-            $date->setTimezone($this->_timezone);
+            $date->setTimezone(is_string($this->_timezone) ? new \DateTimeZone($this->_timezone) : $this->_timezone);
         }
-        return CronExpression::factory($this->_expression)->isDue($date);
+        return (new CronExpression($this->_expression))->isDue($date);
     }
 
     /**
@@ -235,7 +230,7 @@ class Event extends Component
      */
     public function hourly()
     {
-        return $this->cron('0 * * * * *');
+        return $this->cron('0 * * * *');
     }
 
     /**
@@ -257,7 +252,7 @@ class Event extends Component
      */
     public function daily()
     {
-        return $this->cron('0 0 * * * *');
+        return $this->cron('0 0 * * *');
     }
 
     /**
@@ -305,7 +300,7 @@ class Event extends Component
      */
     public function twiceDaily()
     {
-        return $this->cron('0 1,13 * * * *');
+        return $this->cron('0 1,13 * * *');
     }
 
     /**
@@ -407,7 +402,7 @@ class Event extends Component
      */
     public function weekly()
     {
-        return $this->cron('0 0 * * 0 *');
+        return $this->cron('0 0 * * 0');
     }
 
     /**
@@ -430,7 +425,7 @@ class Event extends Component
      */
     public function monthly()
     {
-        return $this->cron('0 0 1 * * *');
+        return $this->cron('0 0 1 * *');
     }
 
     /**
@@ -440,7 +435,7 @@ class Event extends Component
      */
     public function yearly()
     {
-        return $this->cron('0 0 1 1 * *');
+        return $this->cron('0 0 1 1 *');
     }
 
     /**
@@ -450,7 +445,7 @@ class Event extends Component
      */
     public function everyMinute()
     {
-        return $this->cron('* * * * * *');
+        return $this->cron('* * * * *');
     }
 
     /**
@@ -461,7 +456,7 @@ class Event extends Component
      */
     public function everyNMinutes($minutes)
     {
-        return $this->cron('*/'.$minutes.' * * * * *');
+        return $this->cron('*/'.$minutes.' * * * *');
     }
 
     /**
@@ -491,7 +486,7 @@ class Event extends Component
      */
     public function everyThirtyMinutes()
     {
-        return $this->cron('0,30 * * * * *');
+        return $this->cron('0,30 * * * *');
     }
 
     /**

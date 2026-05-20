@@ -3,7 +3,7 @@
 namespace omnilight\scheduling;
 use Yii;
 use yii\base\Application;
-use yii\base\InvalidParamException;
+use yii\base\InvalidArgumentException;
 use yii\mutex\Mutex;
 
 /**
@@ -31,7 +31,7 @@ class CallbackEvent extends Event
      * @param string $callback
      * @param array $parameters
      * @param array $config
-     * @throws InvalidParamException
+     * @throws InvalidArgumentException
      */
     public function __construct(Mutex $mutex, $callback, array $parameters = [], $config = [])
     {
@@ -45,7 +45,7 @@ class CallbackEvent extends Event
 
         if ( ! is_string($this->callback) && ! is_callable($this->callback))
         {
-            throw new InvalidParamException(
+            throw new InvalidArgumentException(
                 "Invalid scheduled callback event. Must be string or callable."
             );
         }
@@ -70,12 +70,12 @@ class CallbackEvent extends Event
      * Do not allow the event to overlap each other.
      *
      * @return $this
-     * @throws InvalidParamException
+     * @throws InvalidArgumentException
      */
     public function withoutOverlapping()
     {
         if (empty($this->_description)) {
-            throw new InvalidParamException(
+            throw new InvalidArgumentException(
                 "A scheduled event name is required to prevent overlapping. Use the 'description' method before 'withoutOverlapping'."
             );
         }
