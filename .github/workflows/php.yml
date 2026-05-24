@@ -8,22 +8,30 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        # The library runs on PHP 8.0+, but PHPUnit 10 requires PHP 8.1+,
+        # so the test matrix starts at 8.1.
+        php-version: ['8.1', '8.2', '8.3', '8.4']
+
+    name: PHP ${{ matrix.php-version }}
+
     steps:
-    - uses: actions/checkout@v2
-      
+    - uses: actions/checkout@v4
+
     - uses: shivammathur/setup-php@v2
       with:
-        php-version: '5.4'
+        php-version: ${{ matrix.php-version }}
         extensions: mbstring
 
-    - name: Validate composer.json and composer.lock
-      run: composer validate
+    - name: Validate composer.json
+      run: composer validate --no-check-lock
 
     - name: Install dependencies
-      run: composer install --prefer-dist --no-progress --no-suggest
+      run: composer install --prefer-dist --no-progress
 
     - name: Run test suite
       run: composer run-script test
