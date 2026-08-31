@@ -22,6 +22,17 @@ or add
 
 to the `require` section of your composer.json.
 
+Requirements
+------------
+
+- PHP 8.0 or higher
+- Yii 2.0
+
+> **Upgrading from 1.x:** cron expressions now use the standard **5-field**
+> format (`minute hour day month weekday`). If you pass custom expressions to
+> `->cron()`, drop the trailing sixth `*`. The built-in helpers
+> (`hourly()`, `daily()`, etc.) were updated accordingly.
+
 Description
 -----------
 
@@ -261,7 +272,7 @@ Using addition functions
 
 If you want to use `thenPing` method of the Event, you should add the following string to the `composer.json` of your app:
 ```
-"guzzlehttp/guzzle": "~5.0"
+"guzzlehttp/guzzle": "^7.0"
 ```
 
 Note about timezones
